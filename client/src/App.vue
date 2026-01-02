@@ -45,7 +45,11 @@
   </div>
 
   <!-- Fullscreen Video Call (During Call) -->
-  <div v-if="callAccepted && !callEnded" class="fullscreen-call">
+  <div 
+    v-if="callAccepted && !callEnded" 
+    class="fullscreen-call"
+    @click="handleScreenTap"
+  >
     <!-- Main Video (Friend's video - Large) -->
     <video 
       ref="userVideo" 
@@ -66,59 +70,61 @@
       <span class="pip-label">You</span>
     </div>
     
-    <!-- Top Bar (Info) -->
-    <div class="top-bar">
-      <div class="call-info">
-        <div class="call-status-dot"></div>
-        <span class="call-duration">Connected</span>
+    <!-- Top Bar (Info) - Auto-hide -->
+    <transition name="fade">
+      <div v-show="showControls" class="top-bar">
+        <div class="call-info">
+          <div class="call-status-dot"></div>
+          <span class="call-duration">{{ callDuration }}</span>
+        </div>
       </div>
-      <button @click="toggleFullscreen" class="icon-btn">
-        <span v-if="!isFullscreen">⛶</span>
-        <span v-else>⛶</span>
-      </button>
-    </div>
+    </transition>
     
-    <!-- Bottom Control Bar -->
-    <div class="bottom-bar">
-      <div class="controls-group">
-        <!-- Audio Toggle -->
-        <button 
-          @click="toggleAudio" 
-          :class="['control-btn', !audioEnabled && 'muted']"
-          title="Mute/Unmute"
-        >
-          <span v-if="audioEnabled">🎤</span>
-          <span v-else>🔇</span>
-        </button>
-        
-        <!-- Video Toggle -->
-        <button 
-          @click="toggleVideo" 
-          :class="['control-btn', !videoEnabled && 'video-off']"
-          title="Camera On/Off"
-        >
-          <span v-if="videoEnabled">📹</span>
-          <span v-else>📷</span>
-        </button>
-        
-        <!-- Settings Toggle -->
-        <button 
-          @click="showSettings = !showSettings" 
-          class="control-btn"
-          title="Settings"
-        >
-          ⚙️
-        </button>
-        
-        <!-- End Call -->
-        <button 
-          @click="leaveCall" 
-          class="control-btn end-call-btn"
-          title="End Call"
-        >
-          📵
-        </button>
+    <!-- Bottom Control Bar - Auto-hide -->
+    <transition name="slide-up">
+      <div v-show="showControls" class="bottom-bar">
+        <div class="controls-group">
+          <!-- Audio Toggle -->
+          <button 
+            @click.stop="toggleAudio" 
+            :class="['control-btn', !audioEnabled && 'muted']"
+            :title="audioEnabled ? 'Mute' : 'Unmute'"
+          >
+            <span v-if="audioEnabled">🎤</span>
+            <span v-else>🔇</span>
+          </button>
+          
+          <!-- Video Toggle -->
+          <button 
+            @click.stop="toggleVideo" 
+            :class="['control-btn', !videoEnabled && 'video-off']"
+            :title="videoEnabled ? 'Turn Camera Off' : 'Turn Camera On'"
+          >
+            <span v-if="videoEnabled">📹</span>
+            <span v-else>📷</span>
+          </button>
+          
+          <!-- Settings Toggle -->
+          <button 
+            @click.stop="showSettings = !showSettings" 
+            class="control-btn"
+            title="Settings"
+          >
+            ⚙️
+          </button>
+        </div>
       </div>
+    </transition>
+    
+    <!-- Hang Up Button (Always Visible) -->
+    <div class="hang-up-container">
+      <button 
+        @click.stop="leaveCall" 
+        class="hang-up-btn"
+        title="End Call"
+      >
+        <span class="hang-up-icon">📞</span>
+      </button>
     </div>
     
     <!-- Settings Panel (Slide up) -->
@@ -181,6 +187,10 @@ const selectedAudioQuality = ref('studio');
 // UI Control
 const showSettings = ref(false);
 const isFullscreen = ref(false);
+const showControls = ref(true);
+let controlsTimeout = null;
+const callStartTime = ref(null);
+const callDuration = ref('00:00');
 
 // Media Controls (WhatsApp Style)
 const audioEnabled = ref(true);
@@ -303,7 +313,9 @@ const callUser = () => {
 
   socket.value.on('callAccepted', (signal) => {
     callAccepted.value = true;
+    startCallTimer();
     peer.signal(signal);
+    resetControlsTimer();
   });
 
   connectionRef.value = peer;
@@ -311,6 +323,7 @@ const callUser = () => {
 
 const answerCall = () => {
   callAccepted.value = true;
+  startCallTimer();
   const peer = new SimplePeer({
     initiator: false,
     trickle: false,
@@ -327,6 +340,9 @@ const answerCall = () => {
 
   peer.signal(callerSignal.value);
   connectionRef.value = peer;
+  
+  // Start auto-hide timer
+  resetControlsTimer();
 };
 
 // 3. Feature: Audio/Video Toggles (The "WhatsApp" Features)
@@ -357,7 +373,44 @@ const endCallCleanup = () => {
     window.location.reload(); // Simple reload to reset state
 };
 
-// 4. Change Video Quality
+// 4. Auto-hide Controls
+const handleScreenTap = () => {
+  showControls.value = true;
+  resetControlsTimer();
+};
+
+const resetControlsTimer = () => {
+  if (controlsTimeout) {
+    clearTimeout(controlsTimeout);
+  }
+  
+  // Auto-hide after 3 seconds
+  controlsTimeout = setTimeout(() => {
+    if (!showSettings.value) {
+      showControls.value = false;
+    }
+  }, 3000);
+};
+
+// 5. Call Duration Timer
+const startCallTimer = () => {
+  callStartTime.value = Date.now();
+  
+  const updateDuration = () => {
+    if (!callAccepted.value || callEnded.value) return;
+    
+    const elapsed = Math.floor((Date.now() - callStartTime.value) / 1000);
+    const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+    const seconds = (elapsed % 60).toString().padStart(2, '0');
+    callDuration.value = `${minutes}:${seconds}`;
+    
+    requestAnimationFrame(updateDuration);
+  };
+  
+  updateDuration();
+};
+
+// 6. Change Video Quality
 const changeVideoQuality = async () => {
   if (!stream.value) return;
   
@@ -701,6 +754,8 @@ body {
   height: 100vh;
   background: #000;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
 }
 
 .main-video {
@@ -714,21 +769,21 @@ body {
 
 .pip-video-container {
   position: absolute;
-  top: 20px;
+  top: 80px;
   right: 20px;
-  width: 200px;
-  height: 150px;
-  border-radius: 12px;
+  width: 120px;
+  height: 160px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
   z-index: 10;
-  border: 3px solid rgba(255,255,255,0.2);
+  border: 3px solid rgba(255,255,255,0.3);
   transition: all 0.3s;
+  background: #1a1a1a;
 }
 
-.pip-video-container:hover {
-  transform: scale(1.05);
-  border-color: rgba(255,255,255,0.4);
+.pip-video-container:active {
+  transform: scale(0.95);
 }
 
 .pip-video {
@@ -741,12 +796,13 @@ body {
   position: absolute;
   bottom: 8px;
   left: 8px;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.8);
   color: white;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 /* Top Bar */
@@ -755,11 +811,11 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  padding: 20px 30px;
+  padding: 20px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
   z-index: 5;
 }
 
@@ -770,8 +826,8 @@ body {
 }
 
 .call-status-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   background: #48bb78;
   border-radius: 50%;
   animation: pulse 2s infinite;
@@ -779,26 +835,9 @@ body {
 
 .call-duration {
   color: white;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.icon-btn {
-  background: rgba(255,255,255,0.2);
-  border: none;
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.3s;
-  backdrop-filter: blur(10px);
-}
-
-.icon-btn:hover {
-  background: rgba(255,255,255,0.3);
-  transform: scale(1.1);
+  font-size: 15px;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 /* Bottom Control Bar */
@@ -807,10 +846,11 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 30px;
+  padding: 20px;
+  padding-bottom: 120px;
   display: flex;
   justify-content: center;
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
   z-index: 5;
 }
 
@@ -821,43 +861,82 @@ body {
 }
 
 .control-btn {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.25);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: white;
   font-size: 28px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.control-btn:hover {
-  background: rgba(255,255,255,0.3);
-  transform: scale(1.1);
+.control-btn:active {
+  transform: scale(0.9);
+  background: rgba(255,255,255,0.35);
 }
 
 .control-btn.muted {
-  background: rgba(239, 68, 68, 0.9);
+  background: rgba(239, 68, 68, 0.95);
 }
 
 .control-btn.video-off {
-  background: rgba(59, 130, 246, 0.9);
+  background: rgba(59, 130, 246, 0.95);
 }
 
-.control-btn.end-call-btn {
-  background: rgba(239, 68, 68, 0.9);
+/* Hang Up Button (Always Visible) */
+.hang-up-container {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+.hang-up-btn {
   width: 70px;
   height: 70px;
+  border-radius: 50%;
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  animation: pulse-hang-up 2s ease-in-out infinite;
 }
 
-.control-btn.end-call-btn:hover {
-  background: rgba(220, 38, 38, 1);
-  transform: scale(1.15);
+.hang-up-btn:active {
+  transform: scale(0.9);
+  background: #dc2626;
+}
+
+.hang-up-icon {
+  transform: rotate(135deg);
+  display: block;
+}
+
+@keyframes pulse-hang-up {
+  0%, 100% {
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.8);
+  }
 }
 
 /* Settings Panel */
@@ -957,32 +1036,113 @@ body {
   opacity: 0;
 }
 
+/* Fade Animation */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .pip-video-container {
-    width: 120px;
-    height: 90px;
+    width: 100px;
+    height: 140px;
+    top: 70px;
+    right: 15px;
+    border-width: 2px;
+    border-radius: 12px;
+  }
+
+  .control-btn {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+
+  .controls-group {
+    gap: 16px;
+  }
+
+  .hang-up-btn {
+    width: 68px;
+    height: 68px;
+    font-size: 30px;
+  }
+
+  .lobby-card {
+    padding: 30px 20px;
+  }
+  
+  .bottom-bar {
+    padding: 15px;
+    padding-bottom: 110px;
+  }
+  
+  .settings-panel {
+    padding: 25px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pip-video-container {
+    width: 90px;
+    height: 120px;
+    top: 60px;
+    right: 12px;
+  }
+  
+  .control-btn {
+    width: 52px;
+    height: 52px;
+    font-size: 22px;
+  }
+  
+  .controls-group {
+    gap: 12px;
+  }
+  
+  .hang-up-btn {
+    width: 64px;
+    height: 64px;
+    bottom: 25px;
+  }
+  
+  .call-duration {
+    font-size: 14px;
+  }
+  
+  .pip-label {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .pip-video-container {
+    width: 80px;
+    height: 100px;
     top: 15px;
     right: 15px;
   }
   
+  .bottom-bar {
+    padding-bottom: 90px;
+  }
+  
+  .hang-up-btn {
+    width: 56px;
+    height: 56px;
+    bottom: 20px;
+  }
+  
   .control-btn {
-    width: 50px;
-    height: 50px;
-    font-size: 24px;
-  }
-  
-  .control-btn.end-call-btn {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .controls-group {
-    gap: 15px;
-  }
-  
-  .lobby-card {
-    padding: 40px 30px;
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
   }
 }
 
