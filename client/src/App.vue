@@ -94,14 +94,24 @@
             <span v-else>🔇</span>
           </button>
           
-          <!-- Video Toggle -->
+          <!-- Camera On/Off -->
           <button 
-            @click.stop="toggleVideo" 
-            :class="['control-btn', !videoEnabled && 'video-off']"
-            :title="videoEnabled ? 'Turn Camera Off' : 'Turn Camera On'"
+            @click.stop="toggleCamera" 
+            :class="['control-btn', !cameraEnabled && 'camera-off']"
+            :title="cameraEnabled ? 'Turn Camera Off' : 'Turn Camera On'"
           >
-            <span v-if="videoEnabled">📹</span>
+            <span v-if="cameraEnabled">📹</span>
             <span v-else>📷</span>
+          </button>
+          
+          <!-- Switch Camera (Front/Rear) -->
+          <button 
+            v-if="availableCameras.length > 1 && cameraEnabled"
+            @click.stop="switchCamera" 
+            class="control-btn"
+            :title="facingMode === 'user' ? 'Switch to Rear Camera' : 'Switch to Front Camera'"
+          >
+            <span>🔄</span>
           </button>
           
           <!-- Settings Toggle -->
@@ -136,6 +146,21 @@
         </div>
         
         <div class="settings-content">
+          <div class="setting-item">
+            <label>📹 Camera</label>
+            <div class="camera-info">
+              <p class="info-text">
+                Status: <strong>{{ cameraEnabled ? 'On' : 'Off' }}</strong>
+              </p>
+              <p class="info-text">
+                Mode: <strong>{{ facingMode === 'user' ? 'Front Camera' : 'Rear Camera' }}</strong>
+              </p>
+              <p class="info-text" v-if="availableCameras.length > 0">
+                Available: <strong>{{ availableCameras.length }} camera(s)</strong>
+              </p>
+            </div>
+          </div>
+          
           <div class="setting-item">
             <label>📊 Video Quality</label>
             <select v-model="selectedQuality" @change="changeVideoQuality" class="settings-select">
@@ -196,6 +221,11 @@ const callDuration = ref('00:00');
 const audioEnabled = ref(true);
 const videoEnabled = ref(true);
 
+// Camera Controls
+const cameraEnabled = ref(false);
+const facingMode = ref('user'); // 'user' = front camera, 'environment' = rear camera
+const availableCameras = ref([]);
+
 // Refs for HTML elements
 const myVideo = ref(null);
 const userVideo = ref(null);
@@ -236,14 +266,13 @@ const audioQualityPresets = {
 
 // 1. Initialize System
 onMounted(async () => {
-  // Get Camera/Mic Permissions immediately with default quality
+  // Get available cameras
+  await enumerateCameras();
+  
+  // Get Camera/Mic Permissions - Start with camera OFF
   try {
     const constraints = {
-      video: {
-        width: { ideal: qualityPresets.medium.width },
-        height: { ideal: qualityPresets.medium.height },
-        frameRate: { ideal: qualityPresets.medium.frameRate }
-      },
+      video: false, // Start with camera off
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
@@ -359,6 +388,126 @@ const toggleVideo = () => {
   if(videoTrack) {
     videoTrack.enabled = !videoTrack.enabled;
     videoEnabled.value = videoTrack.enabled;
+  }
+};
+
+// Turn Camera On/Off (Complete start/stop)
+const toggleCamera = async () => {
+  if (cameraEnabled.value) {
+    // Turn camera OFF
+    const videoTrack = stream.value?.getVideoTracks()[0];
+    if (videoTrack) {
+      videoTrack.stop();
+      stream.value.removeTrack(videoTrack);
+    }
+    cameraEnabled.value = false;
+    videoEnabled.value = false;
+  } else {
+    // Turn camera ON
+    try {
+      const quality = qualityPresets[selectedQuality.value];
+      const constraints = {
+        video: {
+          width: { ideal: quality.width },
+          height: { ideal: quality.height },
+          frameRate: { ideal: quality.frameRate },
+          facingMode: facingMode.value
+        },
+        audio: false
+      };
+      
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      
+      stream.value.addTrack(newVideoTrack);
+      
+      if (myVideo.value) {
+        myVideo.value.srcObject = stream.value;
+      }
+      
+      // Replace track in peer connection
+      if (connectionRef.value && connectionRef.value._pc) {
+        const sender = connectionRef.value._pc.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (sender && sender.track) {
+          await sender.replaceTrack(newVideoTrack);
+        } else {
+          connectionRef.value._pc.addTrack(newVideoTrack, stream.value);
+        }
+      }
+      
+      cameraEnabled.value = true;
+      videoEnabled.value = true;
+    } catch (err) {
+      console.error('Failed to turn on camera:', err);
+      alert('Could not access camera. Please check permissions.');
+    }
+  }
+};
+
+// Switch Camera (Front/Rear)
+const switchCamera = async () => {
+  if (!cameraEnabled.value) {
+    alert('Please turn on the camera first!');
+    return;
+  }
+  
+  // Toggle facing mode
+  facingMode.value = facingMode.value === 'user' ? 'environment' : 'user';
+  
+  try {
+    // Stop current video track
+    const oldVideoTrack = stream.value.getVideoTracks()[0];
+    if (oldVideoTrack) {
+      oldVideoTrack.stop();
+      stream.value.removeTrack(oldVideoTrack);
+    }
+    
+    // Get new stream with opposite camera
+    const quality = qualityPresets[selectedQuality.value];
+    const constraints = {
+      video: {
+        width: { ideal: quality.width },
+        height: { ideal: quality.height },
+        frameRate: { ideal: quality.frameRate },
+        facingMode: facingMode.value
+      },
+      audio: false
+    };
+    
+    const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const newVideoTrack = newStream.getVideoTracks()[0];
+    
+    stream.value.addTrack(newVideoTrack);
+    
+    if (myVideo.value) {
+      myVideo.value.srcObject = stream.value;
+    }
+    
+    // Replace track in peer connection
+    if (connectionRef.value && connectionRef.value._pc) {
+      const sender = connectionRef.value._pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (sender) {
+        await sender.replaceTrack(newVideoTrack);
+      }
+    }
+    
+    console.log(`Camera switched to ${facingMode.value === 'user' ? 'front' : 'rear'}`);
+  } catch (err) {
+    console.error('Failed to switch camera:', err);
+    alert('Could not switch camera. Your device may not have multiple cameras.');
+    // Revert facing mode if failed
+    facingMode.value = facingMode.value === 'user' ? 'environment' : 'user';
+  }
+};
+
+// Enumerate available cameras
+const enumerateCameras = async () => {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    availableCameras.value = devices.filter(device => device.kind === 'videoinput');
+    console.log(`Found ${availableCameras.value.length} cameras`);
+  } catch (err) {
+    console.error('Failed to enumerate cameras:', err);
   }
 };
 
@@ -893,6 +1042,10 @@ body {
   background: rgba(59, 130, 246, 0.95);
 }
 
+.control-btn.camera-off {
+  background: rgba(59, 130, 246, 0.95);
+}
+
 /* Hang Up Button (Always Visible) */
 .hang-up-container {
   position: fixed;
@@ -1024,6 +1177,27 @@ body {
 
 .settings-select:hover {
   border-color: #cbd5e0;
+}
+
+.camera-info {
+  background: #f7fafc;
+  padding: 15px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-text {
+  font-size: 14px;
+  color: #4a5568;
+  display: flex;
+  justify-content: space-between;
+}
+
+.info-text strong {
+  color: #2d3748;
+  font-weight: 600;
 }
 
 /* Slide Up Animation */
