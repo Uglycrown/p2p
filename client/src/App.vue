@@ -252,7 +252,9 @@ onMounted(async () => {
   }
 
   // Connect to Signaling Server
-  socket.value = io('http://localhost:5000'); // CHANGE THIS URL WHEN DEPLOYING
+  // IMPORTANT: Replace with your Render server URL after deploying
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+  socket.value = io(serverUrl);
 
   socket.value.on('me', (id) => myId.value = id);
   
