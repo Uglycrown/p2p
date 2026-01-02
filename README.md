@@ -54,20 +54,18 @@ The app will open at `http://localhost:5173` (or similar)
 
 ### Testing with Two Users
 
-**Option 1: Two Browser Tabs**
+**Option 1: Two Browser Tabs (Local Testing)**
 1. Open the app in two different browser tabs
 2. Both users enter the **same room name** (e.g., `SecretRoom123`)
 3. Click "Join Room" in both tabs
 4. When both are connected, click "Start Video Call"
 5. The other user will see "Incoming Call..." and can click "Answer"
 
-**Option 2: Two Devices on Same Network**
-1. Find your computer's local IP address
-2. Update `socket.io` connection in `client/src/App.vue`:
-   ```javascript
-   socket.value = io('http://YOUR_LOCAL_IP:5000');
-   ```
-3. Access the app from your phone's browser using `http://YOUR_LOCAL_IP:5173`
+**Option 2: Two Devices (Live Deployment)**
+1. Deploy your app to the cloud (see DEPLOYMENT_GUIDE.md)
+2. Access the live URL from both devices
+3. Both join the same room name
+4. Start your video call from anywhere in the world!
 
 ### During a Call
 

@@ -192,13 +192,14 @@ If ports are in use, modify:
 4. Start call → Answer
 5. ✅ You see yourself in both tabs!
 
-### Scenario 2: LAN Testing (Two Devices)
-1. Find computer IP: `ipconfig` → IPv4 (e.g., 192.168.1.100)
-2. Update `App.vue` line 92: `io('http://192.168.1.100:5000')`
-3. Computer: Open `http://localhost:5173`
-4. Phone: Open `http://192.168.1.100:5173`
-5. Both join same room
-6. ✅ Video call between devices works!
+### Scenario 2: Live Testing (Multiple Devices)
+1. Deploy server to Render (free)
+2. Deploy client to Vercel (free)
+3. Update `App.vue` with server URL
+4. Access live URL from computer
+5. Access same URL from phone
+6. Both join same room
+7. ✅ Video call works globally!
 
 ### Scenario 3: Production Deployment
 1. Deploy server to Railway/Heroku/DigitalOcean

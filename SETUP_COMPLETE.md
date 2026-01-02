@@ -56,20 +56,13 @@ npm run dev
 ✅ **Secure Rooms** - Only 2 people per room  
 ✅ **End Call** - Gracefully disconnect  
 
-### 📱 Test on Phone + Computer
+### 📱 Test on Multiple Devices
 
-1. Find your computer's IP:
-   ```bash
-   ipconfig
-   ```
-   Look for "IPv4 Address" (e.g., 192.168.1.100)
-
-2. Edit `client/src/App.vue` line 92:
-   ```javascript
-   socket.value = io('http://192.168.1.100:5000');
-   ```
-
-3. On your phone, open: `http://192.168.1.100:5173`
+To test on phone + computer, deploy your app live:
+1. Follow the **DEPLOYMENT_GUIDE.md**
+2. Deploy to Render (backend) + Vercel (frontend)
+3. Access the same URL from all devices
+4. Works from anywhere in the world! 🌍
 
 ### 🛠️ Tech Stack
 

@@ -179,35 +179,16 @@ npm install
 ### 📱 Mobile/Cross-Device Issues
 
 #### Problem: Can't access from phone
-**Checklist:**
-1. ✅ Phone and computer on SAME WiFi network
-2. ✅ Found computer's IP address correctly
-3. ✅ Updated Socket.io URL in App.vue to computer's IP
-4. ✅ Firewall allows connections on port 5000 and 5173
-
-**Find Computer IP:**
-```bash
-# Windows
-ipconfig
-
-# Look for "IPv4 Address" under your active network adapter
-# Example: 192.168.1.100
-```
-
-**Update App.vue (line 92):**
-```javascript
-socket.value = io('http://192.168.1.100:5000'); // Use your actual IP
-```
-
-**Access from phone:**
-```
-http://192.168.1.100:5173
-```
+**Solution:** Deploy your app to the cloud!
+1. Follow **DEPLOYMENT_GUIDE.md** to deploy to Render + Vercel
+2. Access the live URL from any device
+3. No need for local IP addresses or same network
+4. Works from anywhere in the world! 🌍
 
 #### Problem: HTTPS required error on mobile
-**Cause:** Some mobile browsers require HTTPS for camera/mic
+**Cause:** Mobile browsers require HTTPS for camera/mic
 **Solution:** 
-- For testing: Use Chrome on Android (works with HTTP localhost)
+- Deploy to Vercel/Netlify (automatic HTTPS)
 - For production: Deploy with SSL certificates
 
 ---

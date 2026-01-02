@@ -44,23 +44,13 @@ Local: http://localhost:5173/
 7. In **Tab 2**: Click "Answer" when you see "Incoming Call..."
 8. 🎉 You're connected!
 
-### Method 2: Two Devices (Phone + Computer)
+### Method 2: Two Devices (Use Live Deployment)
 
-1. Find your computer's IP address:
-   - Windows: Open CMD and type `ipconfig` (look for IPv4 Address)
-   - Mac/Linux: Open Terminal and type `ifconfig` or `ip addr`
-   
-2. Edit `client/src/App.vue` line 92:
-   ```javascript
-   // Change from:
-   socket.value = io('http://localhost:5000');
-   
-   // To (replace with YOUR IP):
-   socket.value = io('http://192.168.1.100:5000');
-   ```
-
-3. Access from phone: `http://192.168.1.100:5173`
-4. Follow the same room joining steps as Method 1
+To test on multiple devices (phone + computer):
+1. Deploy your app live (see DEPLOYMENT_GUIDE.md)
+2. Access the same live URL from both devices
+3. Both devices join the same room name
+4. Start your video call!
 
 ## 🎮 Controls During Call
 

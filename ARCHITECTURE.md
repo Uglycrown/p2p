@@ -267,14 +267,13 @@ Tab 2 → Answer
 ✅ Works!
 ```
 
-### 2. Testing on LAN (Two Devices)
+### 2. Testing Live (Multiple Devices)
 ```
-Computer → Find IP (192.168.1.100)
-Computer → Update App.vue socket URL
-Computer → Start both servers
-Phone → Open http://192.168.1.100:5173
+Deploy → Render (server) + Vercel (client)
+Computer → Open live URL
+Phone → Open same live URL
 Both → Join same room name
-✅ Works!
+✅ Works from anywhere!
 ```
 
 ### 3. Production Deployment
