@@ -2086,7 +2086,7 @@ body {
   }
 
   .bottom-bar {
-    bottom: 25px;
+    bottom: 40px;
   }
 
   .settings-panel {
@@ -2213,7 +2213,7 @@ body {
   }
   
   .bottom-bar {
-    bottom: 20px;
+    bottom: 35px;
   }
   
   .call-duration {
@@ -2280,7 +2280,7 @@ body {
   }
   
   .bottom-bar {
-    bottom: 15px;
+    bottom: 25px;
   }
   
   .control-btn-modern {
