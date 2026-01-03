@@ -203,6 +203,19 @@
             </svg>
           </button>
           
+          <!-- Camera Selector (Multi-camera devices) -->
+          <button 
+            v-if="availableCameras.length > 2 && cameraEnabled"
+            @click.stop="showCameraSelector = !showCameraSelector" 
+            class="control-btn-modern"
+            title="Select Camera"
+          >
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M1 12h6m6 0h6"/>
+            </svg>
+          </button>
+          
           <!-- Audio Toggle -->
           <button 
             @click.stop="toggleAudio" 
@@ -234,6 +247,30 @@
               <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
             </svg>
           </button>
+        </div>
+      </div>
+    </transition>
+    
+    <!-- Camera Selector Popup -->
+    <transition name="fade">
+      <div v-if="showCameraSelector" class="camera-selector-overlay" @click.self="showCameraSelector = false">
+        <div class="camera-selector-panel">
+          <h3>Select Camera</h3>
+          <div class="camera-list">
+            <button 
+              v-for="camera in availableCameras" 
+              :key="camera.deviceId"
+              @click="selectSpecificCamera(camera.deviceId)"
+              :class="['camera-option', selectedCameraId === camera.deviceId && 'active']"
+            >
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 7l-7 5 7 5V7z"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+              <span>{{ getCameraLabel(camera) }}</span>
+            </button>
+          </div>
+          <button @click="showCameraSelector = false" class="close-camera-btn">Close</button>
         </div>
       </div>
     </transition>
@@ -287,7 +324,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, watch, nextTick } from 'vue';
 import io from 'socket.io-client';
 import SimplePeer from 'simple-peer';
 import { E2EEncryption } from './encryption.js';
@@ -327,6 +364,8 @@ const videoEnabled = ref(true);
 const cameraEnabled = ref(false);
 const facingMode = ref('user'); // 'user' = front camera, 'environment' = rear camera
 const availableCameras = ref([]);
+const selectedCameraId = ref(null);
+const showCameraSelector = ref(false);
 
 // Refs for HTML elements
 const myVideo = ref(null);
@@ -675,6 +714,8 @@ const callUser = () => {
 
   peer.on('stream', (userStream) => {
     userVideo.value.srcObject = userStream;
+    // Ensure video plays
+    userVideo.value.play().catch(err => console.log('Autoplay prevented:', err));
   });
 
   socket.value.on('callAccepted', (signal) => {
@@ -723,6 +764,8 @@ const answerCall = () => {
 
   peer.on('stream', (userStream) => {
     userVideo.value.srcObject = userStream;
+    // Ensure video plays
+    userVideo.value.play().catch(err => console.log('Autoplay prevented:', err));
   });
 
   peer.signal(callerSignal.value);
@@ -868,8 +911,35 @@ const switchCamera = async () => {
     return;
   }
   
+  // Find next camera based on facing mode
+  let targetCamera = null;
+  const currentFacing = facingMode.value;
+  
   // Toggle facing mode
-  facingMode.value = facingMode.value === 'user' ? 'environment' : 'user';
+  facingMode.value = currentFacing === 'user' ? 'environment' : 'user';
+  
+  // Try to find the main camera (not ultra-wide)
+  if (facingMode.value === 'environment') {
+    // Prefer main rear camera over ultra-wide
+    // Labels usually contain keywords like "main", "back", or just "camera 0"
+    const rearCameras = availableCameras.value.filter(cam => {
+      const label = cam.label.toLowerCase();
+      return !label.includes('front') && !label.includes('user') && 
+             (label.includes('back') || label.includes('rear') || label.includes('environment'));
+    });
+    
+    // Prefer cameras without "ultra" or "wide" in the name
+    targetCamera = rearCameras.find(cam => {
+      const label = cam.label.toLowerCase();
+      return !label.includes('ultra') && !label.includes('wide');
+    }) || rearCameras[0];
+  } else {
+    // Front camera
+    targetCamera = availableCameras.value.find(cam => {
+      const label = cam.label.toLowerCase();
+      return label.includes('front') || label.includes('user');
+    });
+  }
   
   try {
     // Stop current video track
@@ -879,10 +949,15 @@ const switchCamera = async () => {
       stream.value.removeTrack(oldVideoTrack);
     }
     
-    // Get new stream with opposite camera
+    // Build constraints
     const quality = qualityPresets[selectedQuality.value];
     const constraints = {
-      video: {
+      video: targetCamera ? {
+        deviceId: { exact: targetCamera.deviceId },
+        width: { ideal: quality.width },
+        height: { ideal: quality.height },
+        frameRate: { ideal: quality.frameRate }
+      } : {
         width: { ideal: quality.width },
         height: { ideal: quality.height },
         frameRate: { ideal: quality.frameRate },
@@ -893,6 +968,8 @@ const switchCamera = async () => {
     
     const newStream = await navigator.mediaDevices.getUserMedia(constraints);
     const newVideoTrack = newStream.getVideoTracks()[0];
+    
+    selectedCameraId.value = newVideoTrack.getSettings().deviceId;
     
     stream.value.addTrack(newVideoTrack);
     
@@ -908,13 +985,97 @@ const switchCamera = async () => {
       }
     }
     
-    console.log(`Camera switched to ${facingMode.value === 'user' ? 'front' : 'rear'}`);
+    console.log(`Camera switched to ${facingMode.value === 'user' ? 'front' : 'rear (main)'}`, targetCamera?.label);
   } catch (err) {
     console.error('Failed to switch camera:', err);
     alert('Could not switch camera. Your device may not have multiple cameras.');
     // Revert facing mode if failed
-    facingMode.value = facingMode.value === 'user' ? 'environment' : 'user';
+    facingMode.value = currentFacing;
   }
+};
+
+// Select specific camera by deviceId
+const selectSpecificCamera = async (deviceId) => {
+  if (!cameraEnabled.value) {
+    alert('Please turn on the camera first!');
+    return;
+  }
+  
+  try {
+    // Stop current video track
+    const oldVideoTrack = stream.value.getVideoTracks()[0];
+    if (oldVideoTrack) {
+      oldVideoTrack.stop();
+      stream.value.removeTrack(oldVideoTrack);
+    }
+    
+    // Get new stream with selected camera
+    const quality = qualityPresets[selectedQuality.value];
+    const constraints = {
+      video: {
+        deviceId: { exact: deviceId },
+        width: { ideal: quality.width },
+        height: { ideal: quality.height },
+        frameRate: { ideal: quality.frameRate }
+      },
+      audio: false
+    };
+    
+    const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const newVideoTrack = newStream.getVideoTracks()[0];
+    
+    selectedCameraId.value = deviceId;
+    
+    // Update facing mode based on camera label
+    const camera = availableCameras.value.find(c => c.deviceId === deviceId);
+    if (camera) {
+      const label = camera.label.toLowerCase();
+      facingMode.value = (label.includes('front') || label.includes('user')) ? 'user' : 'environment';
+    }
+    
+    stream.value.addTrack(newVideoTrack);
+    
+    if (myVideo.value) {
+      myVideo.value.srcObject = stream.value;
+    }
+    
+    // Replace track in peer connection
+    if (connectionRef.value && connectionRef.value._pc) {
+      const sender = connectionRef.value._pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (sender) {
+        await sender.replaceTrack(newVideoTrack);
+      }
+    }
+    
+    showCameraSelector.value = false;
+    console.log(`Camera changed to: ${camera?.label}`);
+  } catch (err) {
+    console.error('Failed to select camera:', err);
+    alert('Could not switch to selected camera.');
+  }
+};
+
+// Get friendly camera label
+const getCameraLabel = (camera) => {
+  if (!camera.label || camera.label === '') {
+    return `Camera ${availableCameras.value.indexOf(camera) + 1}`;
+  }
+  
+  const label = camera.label;
+  
+  // Simplify common labels
+  if (label.toLowerCase().includes('front')) return '📱 Front Camera';
+  if (label.toLowerCase().includes('back') || label.toLowerCase().includes('rear')) {
+    if (label.toLowerCase().includes('ultra') || label.toLowerCase().includes('wide')) {
+      return '📷 Ultra Wide Camera';
+    }
+    if (label.toLowerCase().includes('tele') || label.toLowerCase().includes('zoom')) {
+      return '🔭 Telephoto Camera';
+    }
+    return '📷 Main Camera';
+  }
+  
+  return camera.label;
 };
 
 // Enumerate available cameras
@@ -927,6 +1088,20 @@ const enumerateCameras = async () => {
     console.error('Failed to enumerate cameras:', err);
   }
 };
+
+// Watch userVideo srcObject and ensure it plays
+watch(() => userVideo.value?.srcObject, async (newSrcObject) => {
+  if (newSrcObject && userVideo.value) {
+    await nextTick();
+    userVideo.value.play().catch(err => {
+      console.log('Video autoplay prevented:', err);
+      // Try again after a short delay
+      setTimeout(() => {
+        userVideo.value?.play().catch(e => console.log('Retry failed:', e));
+      }, 100);
+    });
+  }
+});
 
 // Screen Share Toggle
 const toggleScreenShare = async () => {
@@ -1245,6 +1420,7 @@ body {
   height: 300px;
   object-fit: cover;
   display: block;
+  transform: scaleX(-1);
 }
 
 .camera-off-message {
@@ -1690,6 +1866,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: scaleX(-1);
 }
 
 .pip-label {
@@ -2307,4 +2484,110 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* Camera Selector Overlay */
+.camera-selector-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.camera-selector-panel {
+  background: linear-gradient(145deg, rgba(40, 40, 40, 0.98), rgba(30, 30, 30, 0.98));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px 24px 0 0;
+  padding: 24px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  animation: slideUpIn 0.3s ease;
+}
+
+.camera-selector-panel h3 {
+  color: white;
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.camera-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.camera-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.camera-option .icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.camera-option:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(4px);
+}
+
+.camera-option.active {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.close-camera-btn {
+  width: 100%;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.close-camera-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+@keyframes slideUpIn {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 </style>
