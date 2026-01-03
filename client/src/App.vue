@@ -305,11 +305,13 @@
           <div class="setting-item">
             <label>📊 Video Quality</label>
             <select v-model="selectedQuality" @change="changeVideoQuality" class="settings-select">
-              <option value="low">Low (360p)</option>
-              <option value="medium">Medium (480p)</option>
-              <option value="high">High (720p)</option>
-              <option value="hd">HD (1080p)</option>
+              <option value="low">Low (360p) - 0.5 Mbps</option>
+              <option value="medium">Medium (480p) - 1 Mbps</option>
+              <option value="high">High (720p) - 2.5 Mbps</option>
+              <option value="hd">HD (1080p) - 4 Mbps</option>
+              <option value="ultra">Ultra HD (1080p) - 6 Mbps</option>
             </select>
+            <p class="quality-hint">Higher quality requires faster internet</p>
           </div>
           
           <div class="setting-item">
@@ -391,12 +393,13 @@ const connectionStatus = ref('disconnected'); // 'connected', 'connecting', 'dis
 const isScreenSharing = ref(false);
 const screenStream = ref(null);
 
-// Quality presets
+// Quality presets with bitrate
 const qualityPresets = {
-  low: { width: 640, height: 360, frameRate: 15 },
-  medium: { width: 854, height: 480, frameRate: 24 },
-  high: { width: 1280, height: 720, frameRate: 30 },
-  hd: { width: 1920, height: 1080, frameRate: 30 }
+  low: { width: 640, height: 360, frameRate: 15, bitrate: 500000 }, // 500 Kbps
+  medium: { width: 854, height: 480, frameRate: 24, bitrate: 1000000 }, // 1 Mbps
+  high: { width: 1280, height: 720, frameRate: 30, bitrate: 2500000 }, // 2.5 Mbps
+  hd: { width: 1920, height: 1080, frameRate: 30, bitrate: 4000000 }, // 4 Mbps
+  ultra: { width: 1920, height: 1080, frameRate: 30, bitrate: 6000000 } // 6 Mbps (Ultra HD)
 };
 
 // Audio quality presets
@@ -696,9 +699,38 @@ const callUser = () => {
     initiator: true,
     trickle: false,
     stream: stream.value,
+    config: {
+      iceServers: [
+        // STUN servers for NAT traversal
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        // TURN servers for difficult networks (relay)
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
+      ],
+      iceCandidatePoolSize: 10
+    },
     offerOptions: {
       offerToReceiveAudio: true,
       offerToReceiveVideo: true
+    },
+    // Force VP9 codec for better compression
+    sdpTransform: (sdp) => {
+      return preferVP9Codec(sdp);
     }
   });
 
@@ -719,6 +751,11 @@ const callUser = () => {
     userVideo.value.srcObject = userStream;
     // Ensure video plays
     userVideo.value.play().catch(err => console.log('Autoplay prevented:', err));
+  });
+  
+  // Apply bitrate constraints after connection
+  peer.on('connect', () => {
+    applyBitrateConstraints(peer);
   });
 
   socket.value.on('callAccepted', (signal) => {
@@ -750,9 +787,38 @@ const answerCall = () => {
     initiator: false,
     trickle: false,
     stream: stream.value,
+    config: {
+      iceServers: [
+        // STUN servers for NAT traversal
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        // TURN servers for difficult networks (relay)
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
+      ],
+      iceCandidatePoolSize: 10
+    },
     answerOptions: {
       offerToReceiveAudio: true,
       offerToReceiveVideo: true
+    },
+    // Force VP9 codec for better compression
+    sdpTransform: (sdp) => {
+      return preferVP9Codec(sdp);
     }
   });
 
@@ -769,6 +835,11 @@ const answerCall = () => {
     userVideo.value.srcObject = userStream;
     // Ensure video plays
     userVideo.value.play().catch(err => console.log('Autoplay prevented:', err));
+  });
+  
+  // Apply bitrate constraints after connection
+  peer.on('connect', () => {
+    applyBitrateConstraints(peer);
   });
 
   peer.signal(callerSignal.value);
@@ -1106,6 +1177,72 @@ watch(() => userVideo.value?.srcObject, async (newSrcObject) => {
   }
 });
 
+// Force VP9 codec for better compression (30-50% bandwidth savings)
+const preferVP9Codec = (sdp) => {
+  console.log('🎥 Applying VP9 codec preference for better quality...');
+  
+  // Prioritize VP9 codec
+  sdp = sdp.replace(/m=video (\d+) RTP\/SAVPF (.+)\r\n/g, (match, port, codecs) => {
+    const codecArray = codecs.split(' ');
+    
+    // Find VP9 codecs
+    const vp9Codecs = codecArray.filter(c => {
+      const rtpmap = sdp.match(new RegExp(`a=rtpmap:${c} VP9`, 'i'));
+      return rtpmap !== null;
+    });
+    
+    // Other codecs as fallback
+    const otherCodecs = codecArray.filter(c => {
+      const rtpmap = sdp.match(new RegExp(`a=rtpmap:${c} VP9`, 'i'));
+      return rtpmap === null;
+    });
+    
+    // VP9 first, then fallbacks
+    const reordered = [...vp9Codecs, ...otherCodecs].join(' ');
+    console.log(vp9Codecs.length > 0 ? '✅ VP9 codec prioritized' : '⚠️ VP9 not available, using fallback');
+    
+    return `m=video ${port} RTP/SAVPF ${reordered}\r\n`;
+  });
+  
+  return sdp;
+};
+
+// Apply bitrate constraints for better quality
+const applyBitrateConstraints = async (peer) => {
+  if (!peer || !peer._pc) return;
+  
+  try {
+    const quality = qualityPresets[selectedQuality.value];
+    const targetBitrate = quality.bitrate;
+    
+    console.log(`🎯 Setting bitrate to ${(targetBitrate / 1000000).toFixed(1)} Mbps for ${selectedQuality.value} quality...`);
+    
+    const sender = peer._pc.getSenders().find(s => s.track?.kind === 'video');
+    
+    if (sender) {
+      const parameters = sender.getParameters();
+      
+      if (!parameters.encodings || parameters.encodings.length === 0) {
+        parameters.encodings = [{}];
+      }
+      
+      // Set maximum bitrate and framerate
+      parameters.encodings[0].maxBitrate = targetBitrate;
+      parameters.encodings[0].maxFramerate = quality.frameRate;
+      
+      // Additional quality settings
+      parameters.encodings[0].priority = 'high';
+      parameters.encodings[0].networkPriority = 'high';
+      
+      await sender.setParameters(parameters);
+      console.log(`✅ Video bitrate set to ${(targetBitrate / 1000000).toFixed(1)} Mbps`);
+      console.log(`📊 Quality: ${selectedQuality.value} | ${quality.width}x${quality.height}@${quality.frameRate}fps`);
+    }
+  } catch (err) {
+    console.error('❌ Failed to set bitrate constraints:', err);
+  }
+};
+
 // Screen Share Toggle
 const toggleScreenShare = async () => {
   if (!callAccepted.value) {
@@ -1271,6 +1408,9 @@ const changeVideoQuality = async () => {
       const sender = connectionRef.value._pc.getSenders().find(s => s.track && s.track.kind === 'video');
       if (sender) {
         await sender.replaceTrack(newVideoTrack);
+        
+        // Re-apply bitrate constraints with new quality settings
+        await applyBitrateConstraints(connectionRef.value);
       }
     }
     
@@ -2207,6 +2347,14 @@ body {
   color: #8e8e93;
   font-weight: 400;
   font-size: 17px;
+}
+
+.quality-hint {
+  margin: 8px 0 0 0;
+  padding: 0 16px;
+  font-size: 13px;
+  color: #8e8e93;
+  font-style: italic;
 }
 
 /* Slide Up Animation */
