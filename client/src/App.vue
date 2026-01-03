@@ -278,6 +278,9 @@
     <!-- Settings Panel (Slide up) -->
     <transition name="slide-up">
       <div v-if="showSettings" class="settings-panel">
+        <!-- Drag Handle -->
+        <div class="settings-handle"></div>
+        
         <div class="settings-header">
           <h3>Call Settings</h3>
           <button @click="showSettings = false" class="close-btn">✕</button>
@@ -2042,116 +2045,188 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 24px 24px 0 0;
-  padding: 30px;
+  background: linear-gradient(to bottom, #f2f2f7 0%, #e5e5ea 100%);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-radius: 20px 20px 0 0;
+  padding: 0;
   z-index: 20;
-  max-height: 50vh;
-  overflow-y: auto;
+  max-height: 70vh;
+  overflow: hidden;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.settings-handle {
+  width: 40px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  margin: 12px auto 8px auto;
+  cursor: grab;
 }
 
 .settings-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  padding: 12px 20px 15px 20px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .settings-header h3 {
-  font-size: 24px;
-  color: #2d3748;
-  font-weight: 600;
+  font-size: 20px;
+  color: #000;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin: 0;
 }
 
 .close-btn {
-  background: none;
+  background: rgba(118, 118, 128, 0.12);
   border: none;
-  font-size: 28px;
-  color: #718096;
+  font-size: 20px;
+  color: #000;
   cursor: pointer;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.3s;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  font-weight: 600;
 }
 
 .close-btn:hover {
-  background: #f7fafc;
-  color: #2d3748;
+  background: rgba(118, 118, 128, 0.18);
+}
+
+.close-btn:active {
+  transform: scale(0.92);
 }
 
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 12px;
+  padding: 20px 16px;
+  padding-bottom: 30px;
+  overflow-y: auto;
+  max-height: calc(70vh - 85px);
 }
 
 .setting-item {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s;
+}
+
+.setting-item:active {
+  transform: scale(0.99);
 }
 
 .setting-item label {
-  font-size: 16px;
+  display: block;
+  font-size: 13px;
   font-weight: 600;
-  color: #2d3748;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 16px 8px 16px;
+  background: white;
 }
 
 .settings-select {
-  padding: 14px 16px;
-  font-size: 15px;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
+  width: 100%;
+  padding: 16px 16px;
+  font-size: 17px;
+  border: none;
   background: white;
   cursor: pointer;
-  transition: all 0.3s;
-  font-family: inherit;
+  transition: all 0.2s;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  color: #000;
+  font-weight: 400;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%238E8E93' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
 }
 
 .settings-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background-color: #f9f9f9;
 }
 
-.settings-select:hover {
-  border-color: #cbd5e0;
+.settings-select:active {
+  background-color: #f2f2f7;
+}
+
+.settings-select option {
+  padding: 12px;
+  background: white;
+  color: #000;
 }
 
 .camera-info {
-  background: #f7fafc;
-  padding: 15px;
-  border-radius: 10px;
+  background: white;
+  padding: 0;
+  border-radius: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 }
 
 .info-text {
-  font-size: 14px;
-  color: #4a5568;
+  font-size: 17px;
+  color: #000;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+  margin: 0;
+}
+
+.info-text:last-child {
+  border-bottom: none;
 }
 
 .info-text strong {
-  color: #2d3748;
-  font-weight: 600;
+  color: #8e8e93;
+  font-weight: 400;
+  font-size: 17px;
 }
 
 /* Slide Up Animation */
 .slide-up-enter-active, .slide-up-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 
 .slide-up-enter-from, .slide-up-leave-to {
   transform: translateY(100%);
   opacity: 0;
+}
+
+/* Custom scrollbar for settings */
+.settings-content::-webkit-scrollbar {
+  width: 0px;
+}
+
+.settings-content {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Fade Animation */
@@ -2267,7 +2342,32 @@ body {
   }
 
   .settings-panel {
-    padding: 25px 20px;
+    max-height: 75vh;
+  }
+  
+  .settings-content {
+    padding: 16px 14px 25px 14px;
+    max-height: calc(75vh - 85px);
+  }
+  
+  .setting-item label {
+    font-size: 12px;
+    padding: 10px 14px 6px 14px;
+  }
+  
+  .settings-select {
+    font-size: 16px;
+    padding: 14px 14px;
+    padding-right: 36px;
+  }
+  
+  .info-text {
+    font-size: 16px;
+    padding: 12px 14px;
+  }
+  
+  .info-text strong {
+    font-size: 16px;
   }
 }
 
