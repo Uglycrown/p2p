@@ -1,0 +1,160 @@
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"XmVnZSw7ikobcX-vAAAB","timestamp":"2026-01-03T15:54:24.169Z"}
+{"duration":"4951ms","level":"info","message":"Client disconnected","socketId":"XmVnZSw7ikobcX-vAAAB","timestamp":"2026-01-03T15:54:29.120Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"5-oOplgKXFXvuaTuAAAD","timestamp":"2026-01-03T15:54:29.153Z"}
+{"level":"info","message":"User authenticated","roomId":"642r-0648-2a4k-1558","socketId":"5-oOplgKXFXvuaTuAAAD","timestamp":"2026-01-03 21:24:29","userId":"c8f92d4e-c545-4bef-879a-55ac1c21201d"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"642r-0648-2a4k-1558","timestamp":"2026-01-03T15:54:29.190Z","userId":"c8f92d4e-c545-4bef-879a-55ac1c21201d"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"642r-0648-2a4k-1558","roomSize":1,"timestamp":"2026-01-03T15:54:29.195Z","userId":"c8f92d4e-c545-4bef-879a-55ac1c21201d"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"y2JGkSCcrkXFpdHcAAAF","timestamp":"2026-01-03T15:54:38.189Z"}
+{"duration":"3659ms","level":"info","message":"Client disconnected","socketId":"y2JGkSCcrkXFpdHcAAAF","timestamp":"2026-01-03T15:54:41.848Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"1gglON8iaob6AhKkAAAH","timestamp":"2026-01-03T15:54:41.866Z"}
+{"level":"info","message":"User authenticated","roomId":"642r-0648-2a4k-1558","socketId":"1gglON8iaob6AhKkAAAH","timestamp":"2026-01-03 21:24:41","userId":"cba662d5-aa06-4745-a321-719ad7bc3b70"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"642r-0648-2a4k-1558","timestamp":"2026-01-03T15:54:41.889Z","userId":"cba662d5-aa06-4745-a321-719ad7bc3b70"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"642r-0648-2a4k-1558","roomSize":3,"timestamp":"2026-01-03T15:54:41.891Z","userId":"cba662d5-aa06-4745-a321-719ad7bc3b70"}
+{"duration":"49619ms","level":"info","message":"Client disconnected","socketId":"1gglON8iaob6AhKkAAAH","timestamp":"2026-01-03T15:55:31.485Z"}
+{"duration":"80240ms","level":"info","message":"Client disconnected","socketId":"5-oOplgKXFXvuaTuAAAD","timestamp":"2026-01-03T15:55:49.393Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"JsajuDnjXyfE-17kAAAJ","timestamp":"2026-01-03T15:55:50.577Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"oWcLAfC9vRKWWTTFAAAL","timestamp":"2026-01-03T15:55:59.806Z"}
+{"duration":"2238ms","level":"info","message":"Client disconnected","socketId":"oWcLAfC9vRKWWTTFAAAL","timestamp":"2026-01-03T15:56:02.044Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"PIwLsncHGVvXDAlRAAAN","timestamp":"2026-01-03T15:56:02.935Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"w5l_2q6K1S0-ZX1uAAAP","timestamp":"2026-01-03T15:56:03.014Z"}
+{"duration":"26052ms","level":"info","message":"Client disconnected","socketId":"JsajuDnjXyfE-17kAAAJ","timestamp":"2026-01-03T15:56:16.629Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"u24gsopz3iNNBsGaAAAR","timestamp":"2026-01-03T15:56:16.647Z"}
+{"level":"info","message":"User authenticated","roomId":"6302-4b5k-6x3e-0l45","socketId":"u24gsopz3iNNBsGaAAAR","timestamp":"2026-01-03 21:26:16","userId":"19612eff-88e3-464c-830c-51598647607f"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"6302-4b5k-6x3e-0l45","timestamp":"2026-01-03T15:56:16.659Z","userId":"19612eff-88e3-464c-830c-51598647607f"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"6302-4b5k-6x3e-0l45","roomSize":1,"timestamp":"2026-01-03T15:56:16.660Z","userId":"19612eff-88e3-464c-830c-51598647607f"}
+{"duration":"55367ms","level":"info","message":"Client disconnected","socketId":"PIwLsncHGVvXDAlRAAAN","timestamp":"2026-01-03T15:56:58.302Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"jnYYvX4bG5L3Fi2iAAAT","timestamp":"2026-01-03T15:56:58.317Z"}
+{"level":"info","message":"User authenticated","roomId":"6302-4b5k-6x3e-0l45","socketId":"jnYYvX4bG5L3Fi2iAAAT","timestamp":"2026-01-03 21:26:58","userId":"ec0ad7e6-a0cb-4557-bc2c-5d76c567cc73"}
+{"duration":"55399ms","level":"info","message":"Client disconnected","socketId":"w5l_2q6K1S0-ZX1uAAAP","timestamp":"2026-01-03T15:56:58.413Z"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"6302-4b5k-6x3e-0l45","timestamp":"2026-01-03T15:56:58.426Z","userId":"ec0ad7e6-a0cb-4557-bc2c-5d76c567cc73"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"6302-4b5k-6x3e-0l45","roomSize":3,"timestamp":"2026-01-03T15:56:58.427Z","userId":"ec0ad7e6-a0cb-4557-bc2c-5d76c567cc73"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"JcTdLrVMvdqWO0GsAAAV","timestamp":"2026-01-03T15:56:58.432Z"}
+{"level":"info","message":"User authenticated","roomId":"6302-4b5k-6x3e-0l45","socketId":"JcTdLrVMvdqWO0GsAAAV","timestamp":"2026-01-03 21:26:58","userId":"268bfb6a-572c-4d8d-a75b-ecd7b76aaf29"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"6302-4b5k-6x3e-0l45","timestamp":"2026-01-03T15:56:58.444Z","userId":"268bfb6a-572c-4d8d-a75b-ecd7b76aaf29"}
+{"action":"room-full","level":"info","message":"Room activity: room-full","roomId":"6302-4b5k-6x3e-0l45","timestamp":"2026-01-03T15:56:58.444Z","userId":"268bfb6a-572c-4d8d-a75b-ecd7b76aaf29"}
+{"duration":"177986ms","level":"info","message":"Client disconnected","socketId":"u24gsopz3iNNBsGaAAAR","timestamp":"2026-01-03T15:59:14.633Z"}
+{"duration":"136320ms","level":"info","message":"Client disconnected","socketId":"jnYYvX4bG5L3Fi2iAAAT","timestamp":"2026-01-03T15:59:14.637Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"zIChbFraBA9Tj1inAAAY","timestamp":"2026-01-03T15:59:14.982Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"klCIA7VBiA_x-u3DAAAZ","timestamp":"2026-01-03T15:59:14.997Z"}
+{"duration":"403096ms","level":"info","message":"Client disconnected","socketId":"klCIA7VBiA_x-u3DAAAZ","timestamp":"2026-01-03T16:05:58.093Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"yqGj7apnWgedV7ecAAAb","timestamp":"2026-01-03T16:05:58.109Z"}
+{"level":"info","message":"User authenticated","roomId":"4q4f-724c-0e1h-3y4f","socketId":"yqGj7apnWgedV7ecAAAb","timestamp":"2026-01-03 21:35:58","userId":"71d61a68-2199-4665-b760-0619bcd15446"}
+{"duration":"539805ms","level":"info","message":"Client disconnected","socketId":"JcTdLrVMvdqWO0GsAAAV","timestamp":"2026-01-03T16:05:58.237Z"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"4q4f-724c-0e1h-3y4f","timestamp":"2026-01-03T16:05:58.246Z","userId":"71d61a68-2199-4665-b760-0619bcd15446"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"4q4f-724c-0e1h-3y4f","roomSize":1,"timestamp":"2026-01-03T16:05:58.247Z","userId":"71d61a68-2199-4665-b760-0619bcd15446"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"HZG3EKSlmrdA6dilAAAd","timestamp":"2026-01-03T16:05:58.252Z"}
+{"level":"info","message":"User authenticated","roomId":"4q4f-724c-0e1h-3y4f","socketId":"HZG3EKSlmrdA6dilAAAd","timestamp":"2026-01-03 21:35:58","userId":"7e4bc974-64d5-48ca-89b5-48f41745e3b5"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"4q4f-724c-0e1h-3y4f","timestamp":"2026-01-03T16:05:58.265Z","userId":"7e4bc974-64d5-48ca-89b5-48f41745e3b5"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"4q4f-724c-0e1h-3y4f","roomSize":3,"timestamp":"2026-01-03T16:05:58.268Z","userId":"7e4bc974-64d5-48ca-89b5-48f41745e3b5"}
+{"duration":"215831ms","level":"info","message":"Client disconnected","socketId":"yqGj7apnWgedV7ecAAAb","timestamp":"2026-01-03T16:09:33.940Z"}
+{"duration":"215711ms","level":"info","message":"Client disconnected","socketId":"HZG3EKSlmrdA6dilAAAd","timestamp":"2026-01-03T16:09:33.963Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"fuhR9UnA2hJrAFh-AAAf","timestamp":"2026-01-03T16:09:34.308Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"oy6yZXWvGmDvavjBAAAh","timestamp":"2026-01-03T16:10:40.485Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"-KjNInHv5gJOK7ytAAAj","timestamp":"2026-01-03T16:10:40.649Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"wOj7yhZD8LuuNlT3AAAl","timestamp":"2026-01-03T16:10:40.694Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"fQYkJkKQxUOdKDrKAAAn","timestamp":"2026-01-03T16:10:40.789Z"}
+{"duration":"96181ms","level":"info","message":"Client disconnected","socketId":"fQYkJkKQxUOdKDrKAAAn","timestamp":"2026-01-03T16:12:16.970Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"Ydl7zCDrzMSYaZkXAAAp","timestamp":"2026-01-03T16:12:16.990Z"}
+{"level":"info","message":"User authenticated","roomId":"0n35-3i2y-0e31-0v0g","socketId":"Ydl7zCDrzMSYaZkXAAAp","timestamp":"2026-01-03 21:42:16","userId":"2862a2bd-4114-44c5-b3e5-53ede8598e58"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"0n35-3i2y-0e31-0v0g","timestamp":"2026-01-03T16:12:17.017Z","userId":"2862a2bd-4114-44c5-b3e5-53ede8598e58"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"0n35-3i2y-0e31-0v0g","roomSize":1,"timestamp":"2026-01-03T16:12:17.018Z","userId":"2862a2bd-4114-44c5-b3e5-53ede8598e58"}
+{"duration":"104298ms","level":"info","message":"Client disconnected","socketId":"-KjNInHv5gJOK7ytAAAj","timestamp":"2026-01-03T16:12:24.947Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"U26IKbFmDO0lGtbxAAAr","timestamp":"2026-01-03T16:12:24.961Z"}
+{"level":"info","message":"User authenticated","roomId":"0n35-3i2y-0e31-0v0g","socketId":"U26IKbFmDO0lGtbxAAAr","timestamp":"2026-01-03 21:42:24","userId":"22b64d3e-59cd-41ed-bfe7-796e8cb0e842"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"0n35-3i2y-0e31-0v0g","timestamp":"2026-01-03T16:12:24.989Z","userId":"22b64d3e-59cd-41ed-bfe7-796e8cb0e842"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"0n35-3i2y-0e31-0v0g","roomSize":3,"timestamp":"2026-01-03T16:12:24.990Z","userId":"22b64d3e-59cd-41ed-bfe7-796e8cb0e842"}
+{"duration":"19078ms","level":"info","message":"Client disconnected","socketId":"Ydl7zCDrzMSYaZkXAAAp","timestamp":"2026-01-03T16:12:36.068Z"}
+{"duration":"801089ms","level":"info","message":"Client disconnected","socketId":"zIChbFraBA9Tj1inAAAY","timestamp":"2026-01-03T16:12:36.071Z"}
+{"duration":"115377ms","level":"info","message":"Client disconnected","socketId":"wOj7yhZD8LuuNlT3AAAl","timestamp":"2026-01-03T16:12:36.071Z"}
+{"duration":"116114ms","level":"info","message":"Client disconnected","socketId":"oy6yZXWvGmDvavjBAAAh","timestamp":"2026-01-03T16:12:36.599Z"}
+{"duration":"11641ms","level":"info","message":"Client disconnected","socketId":"U26IKbFmDO0lGtbxAAAr","timestamp":"2026-01-03T16:12:36.602Z"}
+{"duration":"182297ms","level":"info","message":"Client disconnected","socketId":"fuhR9UnA2hJrAFh-AAAf","timestamp":"2026-01-03T16:12:36.605Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"Y6jXzM8DeSgA0tlDAAAB","timestamp":"2026-01-03T16:13:08.215Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"xn78xikNxoX0ia38AAAD","timestamp":"2026-01-03T16:13:10.392Z"}
+{"duration":"8428ms","level":"info","message":"Client disconnected","socketId":"Y6jXzM8DeSgA0tlDAAAB","timestamp":"2026-01-03T16:13:16.643Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"25BXzMUuRWu9cWV_AAAF","timestamp":"2026-01-03T16:13:16.689Z"}
+{"level":"info","message":"User authenticated","roomId":"113c-4i5p-566g-031t","socketId":"25BXzMUuRWu9cWV_AAAF","timestamp":"2026-01-03 21:43:16","userId":"23e36e51-5606-48e1-999b-343b7556c9bc"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"113c-4i5p-566g-031t","timestamp":"2026-01-03T16:13:16.731Z","userId":"23e36e51-5606-48e1-999b-343b7556c9bc"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"113c-4i5p-566g-031t","roomSize":1,"timestamp":"2026-01-03T16:13:16.733Z","userId":"23e36e51-5606-48e1-999b-343b7556c9bc"}
+{"duration":"12936ms","level":"info","message":"Client disconnected","socketId":"xn78xikNxoX0ia38AAAD","timestamp":"2026-01-03T16:13:23.328Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"BUG9E2PcrfGG_ds8AAAH","timestamp":"2026-01-03T16:13:23.350Z"}
+{"level":"info","message":"User authenticated","roomId":"113c-4i5p-566g-031t","socketId":"BUG9E2PcrfGG_ds8AAAH","timestamp":"2026-01-03 21:43:23","userId":"aec988ac-9d5e-427f-b646-b9dbebcb7a82"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"113c-4i5p-566g-031t","timestamp":"2026-01-03T16:13:23.385Z","userId":"aec988ac-9d5e-427f-b646-b9dbebcb7a82"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"113c-4i5p-566g-031t","roomSize":3,"timestamp":"2026-01-03T16:13:23.388Z","userId":"aec988ac-9d5e-427f-b646-b9dbebcb7a82"}
+{"duration":"49672ms","level":"info","message":"Client disconnected","socketId":"BUG9E2PcrfGG_ds8AAAH","timestamp":"2026-01-03T16:14:13.022Z"}
+{"duration":"56346ms","level":"info","message":"Client disconnected","socketId":"25BXzMUuRWu9cWV_AAAF","timestamp":"2026-01-03T16:14:13.035Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"MeakBM4BJYwGqyfvAAAK","timestamp":"2026-01-03T16:14:14.340Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"DSGjF26zO7yMJHQ7AAAL","timestamp":"2026-01-03T16:14:14.361Z"}
+{"duration":"18607ms","level":"info","message":"Client disconnected","socketId":"MeakBM4BJYwGqyfvAAAK","timestamp":"2026-01-03T16:14:32.947Z"}
+{"duration":"55436ms","level":"info","message":"Client disconnected","socketId":"DSGjF26zO7yMJHQ7AAAL","timestamp":"2026-01-03T16:15:09.797Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"kp8TQ_HmxOKQzspDAAAN","timestamp":"2026-01-03T16:33:53.047Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"Ib9KYhTh9LSSUQHtAAAP","timestamp":"2026-01-03T16:36:52.155Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"k3GNbirURXZWQdbvAAAR","timestamp":"2026-01-03T16:36:52.204Z"}
+{"duration":"200269ms","level":"info","message":"Client disconnected","socketId":"kp8TQ_HmxOKQzspDAAAN","timestamp":"2026-01-03T16:37:13.315Z"}
+{"duration":"21118ms","level":"info","message":"Client disconnected","socketId":"k3GNbirURXZWQdbvAAAR","timestamp":"2026-01-03T16:37:13.322Z"}
+{"duration":"21172ms","level":"info","message":"Client disconnected","socketId":"Ib9KYhTh9LSSUQHtAAAP","timestamp":"2026-01-03T16:37:13.327Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"iYTFN-uTPfvFXTzWAAAT","timestamp":"2026-01-03T16:37:13.863Z"}
+{"duration":"10602ms","level":"info","message":"Client disconnected","socketId":"iYTFN-uTPfvFXTzWAAAT","timestamp":"2026-01-03T16:37:24.465Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"T0XX5aq5Y2AI5LKgAAAV","timestamp":"2026-01-03T16:37:43.886Z"}
+{"duration":"2622ms","level":"info","message":"Client disconnected","socketId":"T0XX5aq5Y2AI5LKgAAAV","timestamp":"2026-01-03T16:37:46.508Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"tNLKL6rgJyYOS_Z_AAAX","timestamp":"2026-01-03T16:37:46.530Z"}
+{"level":"info","message":"User authenticated","roomId":"dfgdsrftge45t4we","socketId":"tNLKL6rgJyYOS_Z_AAAX","timestamp":"2026-01-03 22:07:46","userId":"fbe1e4b4-3fe8-4cb8-bdf0-b60b660e5fdc"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"dfgdsrftge45t4we","timestamp":"2026-01-03T16:37:46.557Z","userId":"fbe1e4b4-3fe8-4cb8-bdf0-b60b660e5fdc"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"dfgdsrftge45t4we","roomSize":1,"timestamp":"2026-01-03T16:37:46.558Z","userId":"fbe1e4b4-3fe8-4cb8-bdf0-b60b660e5fdc"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"XjmsAGCDXVz68TjXAAAZ","timestamp":"2026-01-03T16:37:50.452Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"_jSyDykgjZMybHyxAAAb","timestamp":"2026-01-03T16:37:57.602Z"}
+{"level":"info","message":"User authenticated","roomId":"dfgdsrftge45t4we","socketId":"_jSyDykgjZMybHyxAAAb","timestamp":"2026-01-03 22:07:57","userId":"16362d86-d356-4fc1-8668-f2031e3dece1"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"dfgdsrftge45t4we","timestamp":"2026-01-03T16:37:57.625Z","userId":"16362d86-d356-4fc1-8668-f2031e3dece1"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"dfgdsrftge45t4we","roomSize":3,"timestamp":"2026-01-03T16:37:57.626Z","userId":"16362d86-d356-4fc1-8668-f2031e3dece1"}
+{"duration":"441599ms","level":"info","message":"Client disconnected","socketId":"tNLKL6rgJyYOS_Z_AAAX","timestamp":"2026-01-03T16:45:08.129Z"}
+{"duration":"430661ms","level":"info","message":"Client disconnected","socketId":"_jSyDykgjZMybHyxAAAb","timestamp":"2026-01-03T16:45:08.263Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"ISlci-7wgCfSM_dLAAAd","timestamp":"2026-01-03T16:45:09.472Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"N8fG9AnaSiQiENJrAAAf","timestamp":"2026-01-03T16:45:09.500Z"}
+{"duration":"4589ms","level":"info","message":"Client disconnected","socketId":"ISlci-7wgCfSM_dLAAAd","timestamp":"2026-01-03T16:45:14.061Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"oOeY3f8hT528RheCAAAh","timestamp":"2026-01-03T16:45:14.087Z"}
+{"level":"info","message":"User authenticated","roomId":"dfgdsrftge45t4we","socketId":"oOeY3f8hT528RheCAAAh","timestamp":"2026-01-03 22:15:14","userId":"338e3e53-2587-4e09-bb2b-62702f00ef14"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"dfgdsrftge45t4we","timestamp":"2026-01-03T16:45:14.111Z","userId":"338e3e53-2587-4e09-bb2b-62702f00ef14"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"dfgdsrftge45t4we","roomSize":1,"timestamp":"2026-01-03T16:45:14.113Z","userId":"338e3e53-2587-4e09-bb2b-62702f00ef14"}
+{"duration":"8332ms","level":"info","message":"Client disconnected","socketId":"N8fG9AnaSiQiENJrAAAf","timestamp":"2026-01-03T16:45:17.832Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"-bFFE_CihEX37RFKAAAj","timestamp":"2026-01-03T16:45:17.855Z"}
+{"level":"info","message":"User authenticated","roomId":"dfgdsrftge45t4we","socketId":"-bFFE_CihEX37RFKAAAj","timestamp":"2026-01-03 22:15:17","userId":"d011341f-f1ca-48b1-9efc-58f8c12f2405"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"dfgdsrftge45t4we","timestamp":"2026-01-03T16:45:17.880Z","userId":"d011341f-f1ca-48b1-9efc-58f8c12f2405"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"dfgdsrftge45t4we","roomSize":3,"timestamp":"2026-01-03T16:45:17.882Z","userId":"d011341f-f1ca-48b1-9efc-58f8c12f2405"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"MH0UiqpG7879nVEUAAAl","timestamp":"2026-01-03T17:09:00.774Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"4DyL_Z5BgpgjKQ4wAAAn","timestamp":"2026-01-03T17:09:00.790Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"SdDGJFquCk-KKlhXAAAp","timestamp":"2026-01-03T17:09:00.825Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"ZyVSlSy83fDI-bG3AAAr","timestamp":"2026-01-03T17:09:00.839Z"}
+{"duration":"1505673ms","level":"info","message":"Client disconnected","socketId":"-bFFE_CihEX37RFKAAAj","timestamp":"2026-01-03T17:10:23.528Z"}
+{"duration":"82753ms","level":"info","message":"Client disconnected","socketId":"4DyL_Z5BgpgjKQ4wAAAn","timestamp":"2026-01-03T17:10:23.543Z"}
+{"duration":"82724ms","level":"info","message":"Client disconnected","socketId":"SdDGJFquCk-KKlhXAAAp","timestamp":"2026-01-03T17:10:23.549Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"3_Cpk0T-k8AGp7ciAAAt","timestamp":"2026-01-03T17:10:23.958Z"}
+{"duration":"4503ms","level":"info","message":"Client disconnected","socketId":"3_Cpk0T-k8AGp7ciAAAt","timestamp":"2026-01-03T17:10:28.461Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"7FVoqPL1y_BLY-TlAAAv","timestamp":"2026-01-03T17:10:28.483Z"}
+{"level":"info","message":"User authenticated","roomId":"314s-6l4x-2k2u-1y2p","socketId":"7FVoqPL1y_BLY-TlAAAv","timestamp":"2026-01-03 22:40:28","userId":"221526fa-bb77-4cfc-aa58-d62c5d762687"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"314s-6l4x-2k2u-1y2p","timestamp":"2026-01-03T17:10:28.494Z","userId":"221526fa-bb77-4cfc-aa58-d62c5d762687"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"314s-6l4x-2k2u-1y2p","roomSize":1,"timestamp":"2026-01-03T17:10:28.498Z","userId":"221526fa-bb77-4cfc-aa58-d62c5d762687"}
+{"duration":"92454ms","level":"info","message":"Client disconnected","socketId":"ZyVSlSy83fDI-bG3AAAr","timestamp":"2026-01-03T17:10:33.294Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"KK24gMNiXzaqLw9KAAAx","timestamp":"2026-01-03T17:10:33.312Z"}
+{"level":"info","message":"User authenticated","roomId":"314s-6l4x-2k2u-1y2p","socketId":"KK24gMNiXzaqLw9KAAAx","timestamp":"2026-01-03 22:40:33","userId":"693d6f8a-10f4-44a7-8f1e-17871d901fba"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"314s-6l4x-2k2u-1y2p","timestamp":"2026-01-03T17:10:33.326Z","userId":"693d6f8a-10f4-44a7-8f1e-17871d901fba"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"314s-6l4x-2k2u-1y2p","roomSize":3,"timestamp":"2026-01-03T17:10:33.330Z","userId":"693d6f8a-10f4-44a7-8f1e-17871d901fba"}
+{"duration":"1542034ms","level":"info","message":"Client disconnected","socketId":"oOeY3f8hT528RheCAAAh","timestamp":"2026-01-03T17:10:56.121Z"}
+{"duration":"27645ms","level":"info","message":"Client disconnected","socketId":"7FVoqPL1y_BLY-TlAAAv","timestamp":"2026-01-03T17:10:56.128Z"}
+{"duration":"115366ms","level":"info","message":"Client disconnected","socketId":"MH0UiqpG7879nVEUAAAl","timestamp":"2026-01-03T17:10:56.140Z"}
+{"duration":"22853ms","level":"info","message":"Client disconnected","socketId":"KK24gMNiXzaqLw9KAAAx","timestamp":"2026-01-03T17:10:56.165Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"CBve_ukuBBm0CTxxAAAz","timestamp":"2026-01-03T17:10:57.354Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"mS1yrmKtV_8KH83nAAA1","timestamp":"2026-01-03T17:10:57.371Z"}
+{"duration":"90227ms","level":"info","message":"Client disconnected","socketId":"CBve_ukuBBm0CTxxAAAz","timestamp":"2026-01-03T17:12:27.581Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"eifbW02Hoz2bx7H_AAA3","timestamp":"2026-01-03T17:12:27.602Z"}
+{"level":"info","message":"User authenticated","roomId":"314s-6l4x-2k2u-1y2p","socketId":"eifbW02Hoz2bx7H_AAA3","timestamp":"2026-01-03 22:42:27","userId":"bacedc5b-3e6e-4a55-b769-b56a911c1f23"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"314s-6l4x-2k2u-1y2p","timestamp":"2026-01-03T17:12:27.619Z","userId":"bacedc5b-3e6e-4a55-b769-b56a911c1f23"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"314s-6l4x-2k2u-1y2p","roomSize":1,"timestamp":"2026-01-03T17:12:27.622Z","userId":"bacedc5b-3e6e-4a55-b769-b56a911c1f23"}
+{"duration":"94290ms","level":"info","message":"Client disconnected","socketId":"mS1yrmKtV_8KH83nAAA1","timestamp":"2026-01-03T17:12:31.661Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"mKMmaNq5qZcqwmO8AAA5","timestamp":"2026-01-03T17:12:31.693Z"}
+{"level":"info","message":"User authenticated","roomId":"314s-6l4x-2k2u-1y2p","socketId":"mKMmaNq5qZcqwmO8AAA5","timestamp":"2026-01-03 22:42:31","userId":"03ea2fc6-6b43-4289-906d-fc1cc480c13b"}
+{"action":"join-attempt","level":"info","message":"Room activity: join-attempt","roomId":"314s-6l4x-2k2u-1y2p","timestamp":"2026-01-03T17:12:31.708Z","userId":"03ea2fc6-6b43-4289-906d-fc1cc480c13b"}
+{"action":"joined","level":"info","message":"Room activity: joined","roomId":"314s-6l4x-2k2u-1y2p","roomSize":3,"timestamp":"2026-01-03T17:12:31.712Z","userId":"03ea2fc6-6b43-4289-906d-fc1cc480c13b"}
+{"duration":"69640ms","level":"info","message":"Client disconnected","socketId":"mKMmaNq5qZcqwmO8AAA5","timestamp":"2026-01-03T17:13:41.336Z"}
+{"duration":"74588ms","level":"info","message":"Client disconnected","socketId":"eifbW02Hoz2bx7H_AAA3","timestamp":"2026-01-03T17:13:42.191Z"}
+{"ip":"::1","level":"info","message":"New connection","origin":"http://localhost:5173","socketId":"t788mTsHlEYj81irAAA7","timestamp":"2026-01-03T17:13:47.165Z"}
+{"duration":"6700ms","level":"info","message":"Client disconnected","socketId":"t788mTsHlEYj81irAAA7","timestamp":"2026-01-03T17:13:53.865Z"}

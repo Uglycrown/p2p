@@ -40,12 +40,36 @@
       <div class="lobby-form">
         <input 
           v-model="roomId" 
-          placeholder="Enter Room Name" 
+          placeholder="Enter Room Name (6+ characters)" 
           class="lobby-input" 
           @keyup.enter="joinRoom"
         />
+        
+        <!-- Optional Password -->
+        <div class="password-section">
+          <label class="password-label">
+            <input 
+              type="checkbox" 
+              v-model="isCreatingRoom"
+              class="password-checkbox"
+            />
+            <span>🔒 Create with password (optional)</span>
+          </label>
+          
+          <input 
+            v-if="isCreatingRoom"
+            v-model="roomPassword"
+            type="password"
+            placeholder="Enter password (8+ characters)"
+            class="lobby-input password-input"
+          />
+        </div>
+        
+        <button @click="generateSecureRoomName" class="lobby-btn secondary-btn">
+          🔒 Generate Secure Room
+        </button>
         <button @click="joinRoom" class="lobby-btn primary-btn">
-          <span v-if="!myId">Join Room</span>
+          <span v-if="!myId">{{ isCreatingRoom ? 'Create Room' : 'Join Room' }}</span>
           <span v-else>Joined ✓</span>
         </button>
       </div>
@@ -53,24 +77,32 @@
       <div v-if="myId" class="status-box">
         <div class="status-indicator"></div>
         <p class="status-text">Connected • Waiting for friend...</p>
-        <p v-if="userJoined" class="friend-joined">✨ Friend is here! Ready to call</p>
+        <p v-if="userJoined" class="friend-joined">✨ Friend is here! Connecting...</p>
+        <p v-if="callAccepted" class="friend-joined">🎥 Call in progress!</p>
       </div>
+    </div>
+  </div>
+
+  <!-- Password Modal -->
+  <div v-if="showPasswordModal" class="modal-overlay" @click.self="showPasswordModal = false">
+    <div class="modal-content">
+      <h2>🔒 Room Password Required</h2>
+      <p>This room is password protected. Enter the password to join.</p>
       
-      <button 
-        v-if="userJoined && !isCalling" 
-        @click="callUser" 
-        class="start-call-btn"
-      >
-        <span class="call-icon">📞</span>
-        Start Video Call
-      </button>
+      <input 
+        v-model="roomPassword"
+        type="password"
+        placeholder="Enter room password"
+        class="modal-input"
+        @keyup.enter="joinWithPassword"
+      />
       
-      <div v-if="incomingCall && !callAccepted" class="incoming-call">
-        <div class="incoming-animation"></div>
-        <p class="incoming-text">Incoming Call...</p>
-        <button @click="answerCall" class="answer-btn">
-          <span class="call-icon">📞</span>
-          Answer
+      <div class="modal-buttons">
+        <button @click="joinWithPassword" class="modal-btn primary">
+          Join Room
+        </button>
+        <button @click="showPasswordModal = false; roomPassword = ''" class="modal-btn secondary">
+          Cancel
         </button>
       </div>
     </div>
@@ -144,6 +176,20 @@
             </svg>
           </button>
           
+          <!-- Screen Share Toggle -->
+          <button 
+            @click.stop="toggleScreenShare" 
+            :class="['control-btn-modern', isScreenSharing && 'btn-active']"
+            title="Share Screen"
+          >
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+              <polyline v-if="isScreenSharing" points="10 8 12 10 15 7" stroke-width="3"/>
+            </svg>
+          </button>
+          
           <!-- Switch Camera (Front/Rear) -->
           <button 
             v-if="availableCameras.length > 1 && cameraEnabled"
@@ -177,22 +223,20 @@
               <line x1="8" y1="23" x2="16" y2="23"/>
             </svg>
           </button>
+          
+          <!-- Hang Up Button -->
+          <button 
+            @click.stop="leaveCall" 
+            class="control-btn-modern hang-up-red"
+            title="End Call"
+          >
+            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+            </svg>
+          </button>
         </div>
       </div>
     </transition>
-    
-    <!-- Hang Up Button (Always Visible) -->
-    <div class="hang-up-container-always">
-      <button 
-        @click.stop="leaveCall" 
-        class="hang-up-btn-always"
-        title="End Call"
-      >
-        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M22 10.5V11a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2zM2 11V10.5a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2V11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm12-8C9.79 3 6 5.91 6 9.5V11H4.5c-1.1 0-2 .9-2 2v1c0 1.1.9 2 2 2H6v3c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-3h1.5c1.1 0 2-.9 2-2v-1c0-1.1-.9-2-2-2H18V9.5C18 5.91 14.21 3 12 3z"/>
-        </svg>
-      </button>
-    </div>
     
     <!-- Settings Panel (Slide up) -->
     <transition name="slide-up">
@@ -246,6 +290,7 @@
 import { ref, onMounted, reactive } from 'vue';
 import io from 'socket.io-client';
 import SimplePeer from 'simple-peer';
+import { E2EEncryption } from './encryption.js';
 
 // State
 const socket = ref(null);
@@ -287,6 +332,22 @@ const availableCameras = ref([]);
 const myVideo = ref(null);
 const userVideo = ref(null);
 const connectionRef = ref(null);
+
+// Phase 2: Authentication & Encryption
+const authToken = ref(null);
+const roomPassword = ref('');
+const showPasswordModal = ref(false);
+const roomHasPassword = ref(false);
+const isCreatingRoom = ref(false);
+const e2eEncryption = ref(null);
+
+// Phase 3: Reconnection & Advanced Features
+const isReconnecting = ref(false);
+const reconnectAttempts = ref(0);
+const maxReconnectAttempts = 5;
+const connectionStatus = ref('disconnected'); // 'connected', 'connecting', 'disconnected'
+const isScreenSharing = ref(false);
+const screenStream = ref(null);
 
 // Quality presets
 const qualityPresets = {
@@ -359,31 +420,230 @@ onMounted(async () => {
   // Connect to Signaling Server
   // IMPORTANT: Replace with your Render server URL after deploying
   const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
-  socket.value = io(serverUrl);
+  socket.value = io(serverUrl, {
+    auth: {
+      token: authToken.value // Send JWT token if available
+    }
+  });
 
+  // Setup socket listeners
+  setupSocketListeners();
+});
+
+// Security: Generate secure room name
+const generateSecureRoomName = () => {
+  // Generate cryptographically secure random room name
+  const array = new Uint8Array(12);
+  crypto.getRandomValues(array);
+  
+  // Convert to base36 (0-9, a-z) and format nicely
+  const roomName = Array.from(array, byte => 
+    byte.toString(36).padStart(2, '0')
+  ).join('').substring(0, 16);
+  
+  // Format with dashes for readability
+  const formatted = roomName.match(/.{1,4}/g).join('-');
+  roomId.value = formatted;
+  
+  console.log('✅ Generated secure room name:', formatted);
+};
+
+// Security: Validate room name before joining
+const validateRoomName = (name) => {
+  if (!name || name.length < 6) {
+    return "Room name must be at least 6 characters";
+  }
+  
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+    return "Room name can only contain letters, numbers, dashes, and underscores";
+  }
+  
+  return null;
+};
+
+// 2. Logic Functions
+const joinRoom = async () => {
+  if(!roomId.value) return alert("Enter a room name!");
+  
+  // Security: Validate room name
+  const validationError = validateRoomName(roomId.value);
+  if (validationError) {
+    alert(validationError);
+    return;
+  }
+  
+  try {
+    // Phase 2: Check if room requires password or create with password
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+    
+    // Check room info
+    const roomInfoResponse = await fetch(`${serverUrl}/api/room-info/${roomId.value}`);
+    const roomInfo = await roomInfoResponse.json();
+    
+    if (roomInfo.isFull) {
+      alert("Room is full! Only 2 people allowed.");
+      return;
+    }
+    
+    // If room has password and we're joining (not creating)
+    if (roomInfo.hasPassword && !isCreatingRoom.value) {
+      roomHasPassword.value = true;
+      showPasswordModal.value = true;
+      return; // Wait for password input
+    }
+    
+    // If creating room with password or joining without password
+    const endpoint = isCreatingRoom.value ? '/api/generate-room-token' : '/api/generate-room-token';
+    const body = {
+      roomID: roomId.value,
+      password: roomPassword.value || undefined
+    };
+    
+    const response = await fetch(`${serverUrl}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      alert(error.error || 'Failed to join room');
+      return;
+    }
+    
+    const data = await response.json();
+    authToken.value = data.token;
+    
+    // Initialize E2E encryption
+    e2eEncryption.value = new E2EEncryption(roomId.value, roomPassword.value);
+    
+    // Reconnect socket with new token
+    if (socket.value) {
+      socket.value.disconnect();
+    }
+    
+    socket.value = io(serverUrl, {
+      auth: { token: authToken.value }
+    });
+    
+    // Re-setup socket listeners
+    setupSocketListeners();
+    
+    // Join the room
+    socket.value.emit('joinRoom', roomId.value);
+    
+    console.log('✅ Joined room with authentication');
+    
+  } catch (error) {
+    console.error('❌ Error joining room:', error);
+    alert('Failed to join room. Please try again.');
+  }
+};
+
+// Setup socket event listeners
+const setupSocketListeners = () => {
   socket.value.on('me', (id) => myId.value = id);
   
   socket.value.on('userJoined', (id) => {
-    console.log("Friend joined!");
+    console.log("Friend joined! Auto-starting call...");
     userJoined.value = true;
-    callerId.value = id; // Assuming 2 people, the other ID is the friend
+    callerId.value = id;
+    
+    // Auto-start call immediately when friend joins
+    setTimeout(() => {
+      if (!callAccepted.value && !isCalling.value) {
+        callUser();
+      }
+    }, 500);
+  });
+  
+  socket.value.on('roomFull', () => {
+    alert("Room is full! Only 2 people allowed.");
+  });
+  
+  socket.value.on('error', (data) => {
+    alert(data.message || "An error occurred");
   });
 
   socket.value.on('callUser', (data) => {
-    incomingCall.value = true;
-    callerSignal.value = data.signal;
-    callerId.value = data.from;
+    // Phase 2: Decrypt signal if E2E encryption is enabled
+    try {
+      const signal = e2eEncryption.value 
+        ? e2eEncryption.value.decryptSignal(data.signal)
+        : data.signal;
+        
+      incomingCall.value = true;
+      callerSignal.value = signal;
+      callerId.value = data.from;
+      
+      // Auto-answer call immediately
+      console.log("Incoming call detected! Auto-answering...");
+      setTimeout(() => {
+        if (!callAccepted.value) {
+          answerCall();
+        }
+      }, 100);
+    } catch (error) {
+      console.error('❌ Failed to decrypt signal:', error);
+      alert('Failed to establish secure connection');
+    }
   });
   
   socket.value.on('callEnded', () => {
       endCallCleanup();
   });
-});
+};
 
-// 2. Logic Functions
-const joinRoom = () => {
-  if(!roomId.value) return alert("Enter a room name!");
-  socket.value.emit('joinRoom', roomId.value);
+// Join room with password
+const joinWithPassword = async () => {
+  if (!roomPassword.value || roomPassword.value.length < 8) {
+    alert('Password must be at least 8 characters');
+    return;
+  }
+  
+  try {
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+    
+    const response = await fetch(`${serverUrl}/api/verify-room-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        roomID: roomId.value,
+        password: roomPassword.value
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      alert(error.error || 'Incorrect password');
+      return;
+    }
+    
+    const data = await response.json();
+    authToken.value = data.token;
+    
+    // Initialize E2E encryption with password
+    e2eEncryption.value = new E2EEncryption(roomId.value, roomPassword.value);
+    
+    // Reconnect with token
+    if (socket.value) {
+      socket.value.disconnect();
+    }
+    
+    socket.value = io(serverUrl, {
+      auth: { token: authToken.value }
+    });
+    
+    setupSocketListeners();
+    socket.value.emit('joinRoom', roomId.value);
+    
+    showPasswordModal.value = false;
+    console.log('✅ Joined password-protected room');
+    
+  } catch (error) {
+    console.error('❌ Error joining with password:', error);
+    alert('Failed to join room');
+  }
 };
 
 const callUser = () => {
@@ -401,9 +661,14 @@ const callUser = () => {
   });
 
   peer.on('signal', (data) => {
+    // Phase 2: Encrypt signal if E2E encryption is enabled
+    const signalData = e2eEncryption.value 
+      ? e2eEncryption.value.encryptSignal(data)
+      : data;
+      
     socket.value.emit('callUser', {
       userToCall: callerId.value,
-      signalData: data,
+      signalData: signalData,
       from: myId.value
     });
   });
@@ -413,10 +678,20 @@ const callUser = () => {
   });
 
   socket.value.on('callAccepted', (signal) => {
-    callAccepted.value = true;
-    startCallTimer();
-    peer.signal(signal);
-    resetControlsTimer();
+    // Phase 2: Decrypt signal if E2E encryption is enabled
+    try {
+      const decryptedSignal = e2eEncryption.value 
+        ? e2eEncryption.value.decryptSignal(signal)
+        : signal;
+        
+      callAccepted.value = true;
+      startCallTimer();
+      peer.signal(decryptedSignal);
+      resetControlsTimer();
+    } catch (error) {
+      console.error('❌ Failed to decrypt signal:', error);
+      alert('Failed to establish secure connection');
+    }
   });
 
   connectionRef.value = peer;
@@ -438,7 +713,12 @@ const answerCall = () => {
   });
 
   peer.on('signal', (data) => {
-    socket.value.emit('answerCall', { signal: data, to: callerId.value });
+    // Phase 2: Encrypt signal if E2E encryption is enabled
+    const signalData = e2eEncryption.value 
+      ? e2eEncryption.value.encryptSignal(data)
+      : data;
+      
+    socket.value.emit('answerCall', { signal: signalData, to: callerId.value });
   });
 
   peer.on('stream', (userStream) => {
@@ -646,6 +926,83 @@ const enumerateCameras = async () => {
   } catch (err) {
     console.error('Failed to enumerate cameras:', err);
   }
+};
+
+// Screen Share Toggle
+const toggleScreenShare = async () => {
+  if (!callAccepted.value) {
+    alert('Please start a call first!');
+    return;
+  }
+
+  if (!isScreenSharing.value) {
+    // Start screen sharing
+    try {
+      const screenShareStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          cursor: 'always',
+          displaySurface: 'monitor'
+        },
+        audio: false
+      });
+
+      screenStream.value = screenShareStream;
+      isScreenSharing.value = true;
+
+      // Replace video track in peer connection
+      const screenTrack = screenShareStream.getVideoTracks()[0];
+      const videoSender = connectionRef.value._pc
+        .getSenders()
+        .find(sender => sender.track?.kind === 'video');
+
+      if (videoSender) {
+        await videoSender.replaceTrack(screenTrack);
+      }
+
+      // Update local video
+      myVideo.value.srcObject = screenShareStream;
+
+      // Handle screen share stop (user clicks browser "Stop sharing" button)
+      screenTrack.onended = () => {
+        stopScreenShare();
+      };
+
+      console.log('✅ Screen sharing started');
+    } catch (err) {
+      console.error('Failed to share screen:', err);
+      alert('Could not share screen. Please try again.');
+    }
+  } else {
+    // Stop screen sharing
+    stopScreenShare();
+  }
+};
+
+const stopScreenShare = async () => {
+  if (screenStream.value) {
+    screenStream.value.getTracks().forEach(track => track.stop());
+    screenStream.value = null;
+  }
+
+  isScreenSharing.value = false;
+
+  // Switch back to camera if enabled
+  if (cameraEnabled.value && stream.value) {
+    const videoTrack = stream.value.getVideoTracks()[0];
+    if (videoTrack) {
+      const videoSender = connectionRef.value._pc
+        .getSenders()
+        .find(sender => sender.track?.kind === 'video');
+
+      if (videoSender) {
+        await videoSender.replaceTrack(videoTrack);
+      }
+
+      myVideo.value.srcObject = stream.value;
+    }
+  }
+
+  console.log('✅ Screen sharing stopped');
 };
 
 const leaveCall = () => {
@@ -961,6 +1318,9 @@ body {
 
 .lobby-form {
   margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .lobby-input {
@@ -969,7 +1329,6 @@ body {
   font-size: 16px;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
-  margin-bottom: 16px;
   transition: all 0.3s;
   font-family: inherit;
 }
@@ -995,11 +1354,159 @@ body {
 .primary-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .primary-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+}
+
+.secondary-btn {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+}
+
+.secondary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(72, 187, 120, 0.6);
+}
+
+.secondary-btn:active {
+  transform: translateY(0);
+}
+
+/* Password Section */
+.password-section {
+  margin: 12px 0;
+  text-align: left;
+}
+
+.password-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4a5568;
+  margin-bottom: 8px;
+  user-select: none;
+}
+
+.password-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.password-input {
+  margin-top: 8px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 100px; }
+}
+
+/* Password Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-content h2 {
+  color: #2d3748;
+  margin-bottom: 12px;
+  font-size: 24px;
+}
+
+.modal-content p {
+  color: #718096;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.modal-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modal-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.modal-btn.secondary {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.modal-btn.secondary:hover {
+  background: #cbd5e0;
 }
 
 .status-box {
@@ -1269,7 +1776,7 @@ body {
 /* Bottom Control Bar */
 .bottom-bar {
   position: absolute;
-  bottom: 110px;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -1332,6 +1839,14 @@ body {
   background: rgba(220, 38, 38, 1);
 }
 
+.control-btn-modern.btn-active {
+  background: rgba(34, 197, 94, 0.9);
+}
+
+.control-btn-modern.btn-active:hover {
+  background: rgba(34, 197, 94, 1);
+}
+
 /* Hang Up Button (Red) */
 .hang-up-red {
   background: rgba(220, 38, 38, 0.95) !important;
@@ -1342,62 +1857,6 @@ body {
 .hang-up-red:hover {
   background: rgba(220, 38, 38, 1) !important;
   box-shadow: 0 4px 16px rgba(220, 38, 38, 0.5);
-}
-
-.hang-up-red .icon {
-  transform: rotate(135deg);
-}
-
-/* Hang Up Button (Always Visible) */
-.hang-up-container-always {
-  position: fixed;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-}
-
-.hang-up-btn-always {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(220, 38, 38, 0.95);
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.6);
-  transition: all 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  animation: pulse-hang-up 2.5s ease-in-out infinite;
-}
-
-.hang-up-btn-always .icon {
-  width: 28px;
-  height: 28px;
-  transform: rotate(135deg);
-}
-
-.hang-up-btn-always:hover {
-  background: rgba(220, 38, 38, 1);
-  transform: translateX(-50%) scale(1.05);
-  box-shadow: 0 10px 32px rgba(220, 38, 38, 0.8);
-}
-
-.hang-up-btn-always:active {
-  transform: translateX(-50%) scale(0.95);
-}
-
-@keyframes pulse-hang-up {
-  0%, 100% {
-    box-shadow: 0 8px 24px rgba(220, 38, 38, 0.6);
-  }
-  50% {
-    box-shadow: 0 10px 36px rgba(220, 38, 38, 0.9);
-  }
 }
 
 /* Settings Panel */
@@ -1621,24 +2080,13 @@ body {
     height: 52px !important;
   }
 
-  .hang-up-btn-always {
-    width: 60px;
-    height: 60px;
-    bottom: 25px;
-  }
-
-  .hang-up-btn-always .icon {
-    width: 26px;
-    height: 26px;
-  }
-
   .controls-group {
     gap: 12px;
     padding: 10px 16px;
   }
 
   .bottom-bar {
-    bottom: 100px;
+    bottom: 25px;
   }
 
   .settings-panel {
@@ -1758,17 +2206,6 @@ body {
     width: 48px !important;
     height: 48px !important;
   }
-
-  .hang-up-btn-always {
-    width: 56px;
-    height: 56px;
-    bottom: 20px;
-  }
-
-  .hang-up-btn-always .icon {
-    width: 24px;
-    height: 24px;
-  }
   
   .controls-group {
     gap: 10px;
@@ -1776,7 +2213,7 @@ body {
   }
   
   .bottom-bar {
-    bottom: 95px;
+    bottom: 20px;
   }
   
   .call-duration {
@@ -1843,18 +2280,7 @@ body {
   }
   
   .bottom-bar {
-    bottom: 85px;
-  }
-
-  .hang-up-btn-always {
-    width: 52px;
-    height: 52px;
     bottom: 15px;
-  }
-
-  .hang-up-btn-always .icon {
-    width: 22px;
-    height: 22px;
   }
   
   .control-btn-modern {
