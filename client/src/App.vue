@@ -388,15 +388,21 @@ const joinRoom = () => {
 
 const callUser = () => {
   isCalling.value = true;
+  
+  // Create peer with current stream (may or may not have video)
   const peer = new SimplePeer({
     initiator: true,
     trickle: false,
-    stream: stream.value
+    stream: stream.value,
+    offerOptions: {
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: true
+    }
   });
 
   peer.on('signal', (data) => {
     socket.value.emit('callUser', {
-      userToCall: callerId.value, // We send this to the person who joined
+      userToCall: callerId.value,
       signalData: data,
       from: myId.value
     });
@@ -419,10 +425,16 @@ const callUser = () => {
 const answerCall = () => {
   callAccepted.value = true;
   startCallTimer();
+  
+  // Create peer with current stream (may or may not have video)
   const peer = new SimplePeer({
     initiator: false,
     trickle: false,
-    stream: stream.value
+    stream: stream.value,
+    answerOptions: {
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: true
+    }
   });
 
   peer.on('signal', (data) => {
@@ -509,6 +521,16 @@ const toggleCamera = async () => {
       videoTrack.stop();
       stream.value.removeTrack(videoTrack);
     }
+    
+    // If in a call, remove video track from peer connection
+    if (connectionRef.value && connectionRef.value._pc) {
+      const senders = connectionRef.value._pc.getSenders();
+      const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+      if (videoSender) {
+        connectionRef.value._pc.removeTrack(videoSender);
+      }
+    }
+    
     cameraEnabled.value = false;
     videoEnabled.value = false;
   } else {
@@ -534,13 +556,19 @@ const toggleCamera = async () => {
         myVideo.value.srcObject = stream.value;
       }
       
-      // Replace track in peer connection
+      // Add track to peer connection - FIXED for camera OFF at start
       if (connectionRef.value && connectionRef.value._pc) {
-        const sender = connectionRef.value._pc.getSenders().find(s => s.track && s.track.kind === 'video');
-        if (sender && sender.track) {
-          await sender.replaceTrack(newVideoTrack);
+        const senders = connectionRef.value._pc.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        
+        if (videoSender) {
+          // Replace existing video track
+          await videoSender.replaceTrack(newVideoTrack);
+          console.log('Video track replaced in peer connection');
         } else {
+          // Add new video track if no sender exists (camera was OFF at start)
           connectionRef.value._pc.addTrack(newVideoTrack, stream.value);
+          console.log('Video track added to peer connection');
         }
       }
       
@@ -1241,7 +1269,7 @@ body {
 /* Bottom Control Bar */
 .bottom-bar {
   position: absolute;
-  bottom: 30px;
+  bottom: 110px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
