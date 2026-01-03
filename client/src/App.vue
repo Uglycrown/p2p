@@ -18,6 +18,23 @@
           <span class="camera-icon">📷</span>
           <p>Camera is off</p>
         </div>
+        
+        <!-- Camera Toggle Button (Overlay) -->
+        <button 
+          @click="toggleCameraLobby" 
+          class="lobby-camera-toggle"
+          :title="cameraEnabled ? 'Turn Camera Off' : 'Turn Camera On'"
+        >
+          <svg v-if="cameraEnabled" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 7l-7 5 7 5V7z"/>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+          <svg v-else class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="1" y1="1" x2="23" y2="23"/>
+            <path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3 0h6l2-3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56"/>
+          </svg>
+          <span class="toggle-label">{{ cameraEnabled ? 'Camera On' : 'Camera Off' }}</span>
+        </button>
       </div>
       
       <div class="lobby-form">
@@ -92,6 +109,18 @@
           <div class="call-status-dot"></div>
           <span class="call-duration">{{ callDuration }}</span>
         </div>
+        
+        <!-- Settings Button -->
+        <button 
+          @click.stop="showSettings = !showSettings" 
+          class="settings-btn-top"
+          title="Settings"
+        >
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6M3.93 3.93l4.24 4.24m5.66 5.66l4.24 4.24M1 12h6m6 0h6M3.93 20.07l4.24-4.24m5.66-5.66l4.24-4.24"/>
+          </svg>
+        </button>
       </div>
     </transition>
     
@@ -99,56 +128,69 @@
     <transition name="slide-up">
       <div v-show="showControls" class="bottom-bar">
         <div class="controls-group">
-          <!-- Audio Toggle -->
-          <button 
-            @click.stop="toggleAudio" 
-            :class="['control-btn', !audioEnabled && 'muted']"
-            :title="audioEnabled ? 'Mute' : 'Unmute'"
-          >
-            <span v-if="audioEnabled">🎤</span>
-            <span v-else>🔇</span>
-          </button>
-          
-          <!-- Camera On/Off -->
+          <!-- Camera Toggle -->
           <button 
             @click.stop="toggleCamera" 
-            :class="['control-btn', !cameraEnabled && 'camera-off']"
+            :class="['control-btn-modern', !cameraEnabled && 'btn-disabled']"
             :title="cameraEnabled ? 'Turn Camera Off' : 'Turn Camera On'"
           >
-            <span v-if="cameraEnabled">📹</span>
-            <span v-else>📷</span>
+            <svg v-if="cameraEnabled" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 7l-7 5 7 5V7z"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+            <svg v-else class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="1" y1="1" x2="23" y2="23"/>
+              <path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3 0h6l2-3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56"/>
+            </svg>
           </button>
           
           <!-- Switch Camera (Front/Rear) -->
           <button 
             v-if="availableCameras.length > 1 && cameraEnabled"
             @click.stop="switchCamera" 
-            class="control-btn"
+            class="control-btn-modern"
             :title="facingMode === 'user' ? 'Switch to Rear Camera' : 'Switch to Front Camera'"
           >
-            <span>🔄</span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 10l5 5-5 5"/>
+              <path d="M22 15H11a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4h11"/>
+            </svg>
           </button>
           
-          <!-- Settings Toggle -->
+          <!-- Audio Toggle -->
           <button 
-            @click.stop="showSettings = !showSettings" 
-            class="control-btn"
-            title="Settings"
+            @click.stop="toggleAudio" 
+            :class="['control-btn-modern', !audioEnabled && 'btn-disabled']"
+            :title="audioEnabled ? 'Mute' : 'Unmute'"
           >
-            ⚙️
+            <svg v-if="audioEnabled" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+            <svg v-else class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="1" y1="1" x2="23" y2="23"/>
+              <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/>
+              <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
           </button>
         </div>
       </div>
     </transition>
     
     <!-- Hang Up Button (Always Visible) -->
-    <div class="hang-up-container">
+    <div class="hang-up-container-always">
       <button 
         @click.stop="leaveCall" 
-        class="hang-up-btn"
+        class="hang-up-btn-always"
         title="End Call"
       >
-        <span class="hang-up-icon">📞</span>
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M22 10.5V11a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2zM2 11V10.5a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2V11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm12-8C9.79 3 6 5.91 6 9.5V11H4.5c-1.1 0-2 .9-2 2v1c0 1.1.9 2 2 2H6v3c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-3h1.5c1.1 0 2-.9 2-2v-1c0-1.1-.9-2-2-2H18V9.5C18 5.91 14.21 3 12 3z"/>
+        </svg>
       </button>
     </div>
     
@@ -412,6 +454,49 @@ const toggleVideo = () => {
   if(videoTrack) {
     videoTrack.enabled = !videoTrack.enabled;
     videoEnabled.value = videoTrack.enabled;
+  }
+};
+
+// Lobby Camera Toggle (Same as toggleCamera but for lobby screen)
+const toggleCameraLobby = async () => {
+  if (cameraEnabled.value) {
+    // Turn camera OFF
+    const videoTrack = stream.value?.getVideoTracks()[0];
+    if (videoTrack) {
+      videoTrack.stop();
+      stream.value.removeTrack(videoTrack);
+    }
+    cameraEnabled.value = false;
+    videoEnabled.value = false;
+  } else {
+    // Turn camera ON
+    try {
+      const quality = qualityPresets[selectedQuality.value];
+      const constraints = {
+        video: {
+          width: { ideal: quality.width },
+          height: { ideal: quality.height },
+          frameRate: { ideal: quality.frameRate },
+          facingMode: facingMode.value
+        },
+        audio: false
+      };
+      
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      
+      stream.value.addTrack(newVideoTrack);
+      
+      if (myVideo.value) {
+        myVideo.value.srcObject = stream.value;
+      }
+      
+      cameraEnabled.value = true;
+      videoEnabled.value = true;
+    } catch (err) {
+      console.error('Failed to turn on camera:', err);
+      alert('Could not access camera. Please check permissions.');
+    }
   }
 };
 
@@ -712,16 +797,21 @@ const toggleFullscreen = () => {
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
+  /* Support for iPhone X notch and other safe areas */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* ==================== LOBBY SCREEN ==================== */
 .lobby-container {
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
   display: flex;
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
+  overflow-y: auto; /* Allow scrolling on mobile */
 }
 
 .lobby-card {
@@ -733,6 +823,7 @@ body {
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   text-align: center;
   animation: fadeIn 0.5s ease;
+  margin: auto; /* Center vertically */
 }
 
 @keyframes fadeIn {
@@ -793,6 +884,51 @@ body {
 .camera-off-message p {
   font-size: 16px;
   color: #a0aec0;
+}
+
+/* Lobby Camera Toggle Button */
+.lobby-camera-toggle {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.lobby-camera-toggle .icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+}
+
+.lobby-camera-toggle:hover {
+  background: rgba(0, 0, 0, 0.95);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.lobby-camera-toggle:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+.toggle-label {
+  user-select: none;
 }
 
 .lobby-form {
@@ -909,6 +1045,10 @@ body {
 .incoming-call {
   margin-top: 30px;
   animation: bounceIn 0.6s ease;
+  background: rgba(102, 126, 234, 0.08);
+  padding: 25px;
+  border-radius: 16px;
+  border: 2px solid rgba(102, 126, 234, 0.2);
 }
 
 @keyframes bounceIn {
@@ -924,12 +1064,22 @@ body {
   border: 4px solid #667eea;
   border-radius: 50%;
   animation: ring 1s infinite;
+  position: relative;
+}
+
+.incoming-animation::before {
+  content: '📞';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36px;
 }
 
 @keyframes ring {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
 }
 
 .incoming-text {
@@ -1055,65 +1205,123 @@ body {
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
+.settings-btn-top {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.settings-btn-top .icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+.settings-btn-top:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.settings-btn-top:active {
+  transform: scale(0.95);
+}
+
 /* Bottom Control Bar */
 .bottom-bar {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px;
-  padding-bottom: 120px;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
   z-index: 5;
 }
 
 .controls-group {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   align-items: center;
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 12px 20px;
+  border-radius: 50px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.control-btn {
-  width: 64px;
-  height: 64px;
+.control-btn-modern {
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   color: white;
-  font-size: 28px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  position: relative;
 }
 
-.control-btn:active {
-  transform: scale(0.9);
-  background: rgba(255,255,255,0.35);
+.control-btn-modern .icon {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.5;
 }
 
-.control-btn.muted {
-  background: rgba(239, 68, 68, 0.95);
+.control-btn-modern:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
 }
 
-.control-btn.video-off {
-  background: rgba(59, 130, 246, 0.95);
+.control-btn-modern:active {
+  transform: scale(0.95);
 }
 
-.control-btn.camera-off {
-  background: rgba(59, 130, 246, 0.95);
+.control-btn-modern.btn-disabled {
+  background: rgba(220, 38, 38, 0.9);
+}
+
+.control-btn-modern.btn-disabled:hover {
+  background: rgba(220, 38, 38, 1);
+}
+
+/* Hang Up Button (Red) */
+.hang-up-red {
+  background: rgba(220, 38, 38, 0.95) !important;
+  width: 56px !important;
+  height: 56px !important;
+}
+
+.hang-up-red:hover {
+  background: rgba(220, 38, 38, 1) !important;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.5);
+}
+
+.hang-up-red .icon {
+  transform: rotate(135deg);
 }
 
 /* Hang Up Button (Always Visible) */
-.hang-up-container {
+.hang-up-container-always {
   position: fixed;
   bottom: 30px;
   left: 50%;
@@ -1121,40 +1329,46 @@ body {
   z-index: 100;
 }
 
-.hang-up-btn {
-  width: 70px;
-  height: 70px;
+.hang-up-btn-always {
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: none;
-  background: #ef4444;
+  background: rgba(220, 38, 38, 0.95);
   color: white;
-  font-size: 32px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
-  transition: all 0.2s;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.6);
+  transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  animation: pulse-hang-up 2s ease-in-out infinite;
+  touch-action: manipulation;
+  animation: pulse-hang-up 2.5s ease-in-out infinite;
 }
 
-.hang-up-btn:active {
-  transform: scale(0.9);
-  background: #dc2626;
-}
-
-.hang-up-icon {
+.hang-up-btn-always .icon {
+  width: 28px;
+  height: 28px;
   transform: rotate(135deg);
-  display: block;
+}
+
+.hang-up-btn-always:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 10px 32px rgba(220, 38, 38, 0.8);
+}
+
+.hang-up-btn-always:active {
+  transform: translateX(-50%) scale(0.95);
 }
 
 @keyframes pulse-hang-up {
   0%, 100% {
-    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
+    box-shadow: 0 8px 24px rgba(220, 38, 38, 0.6);
   }
   50% {
-    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.8);
+    box-shadow: 0 10px 36px rgba(220, 38, 38, 0.9);
   }
 }
 
@@ -1287,6 +1501,74 @@ body {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .lobby-container {
+    padding: 15px;
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+
+  .lobby-card {
+    padding: 40px 25px;
+    border-radius: 20px;
+    max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+  }
+
+  .lobby-title {
+    font-size: 26px;
+    margin-bottom: 8px;
+  }
+
+  .lobby-subtitle {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .video-preview-container {
+    max-width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .video-preview {
+    height: 200px;
+  }
+
+  .lobby-camera-toggle {
+    padding: 10px 16px;
+    font-size: 13px;
+    bottom: 12px;
+  }
+
+  .lobby-camera-toggle .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .incoming-call {
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 16px;
+  }
+
+  .incoming-animation {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 15px;
+  }
+
+  .incoming-text {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .answer-btn {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 16px;
+  }
+
   .pip-video-container {
     width: 100px;
     height: 140px;
@@ -1296,37 +1578,137 @@ body {
     border-radius: 12px;
   }
 
-  .control-btn {
-    width: 56px;
-    height: 56px;
-    font-size: 24px;
+  .control-btn-modern {
+    width: 48px;
+    height: 48px;
+  }
+
+  .control-btn-modern .icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .hang-up-red {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  .hang-up-btn-always {
+    width: 60px;
+    height: 60px;
+    bottom: 25px;
+  }
+
+  .hang-up-btn-always .icon {
+    width: 26px;
+    height: 26px;
   }
 
   .controls-group {
-    gap: 16px;
+    gap: 12px;
+    padding: 10px 16px;
   }
 
-  .hang-up-btn {
-    width: 68px;
-    height: 68px;
-    font-size: 30px;
-  }
-
-  .lobby-card {
-    padding: 30px 20px;
-  }
-  
   .bottom-bar {
-    padding: 15px;
-    padding-bottom: 110px;
+    bottom: 100px;
   }
-  
+
   .settings-panel {
     padding: 25px 20px;
   }
 }
 
 @media (max-width: 480px) {
+  .lobby-container {
+    padding: 10px;
+    padding-top: 30px;
+  }
+
+  .lobby-card {
+    padding: 30px 20px;
+    border-radius: 16px;
+    max-height: calc(100vh - 60px);
+    max-height: calc(100dvh - 60px);
+  }
+
+  .lobby-title {
+    font-size: 22px;
+  }
+
+  .lobby-subtitle {
+    font-size: 13px;
+    margin-bottom: 15px;
+  }
+
+  .video-preview {
+    height: 180px;
+  }
+
+  .video-preview-container {
+    margin-bottom: 15px;
+  }
+
+  .lobby-camera-toggle {
+    padding: 8px 14px;
+    font-size: 12px;
+    bottom: 10px;
+  }
+
+  .lobby-camera-toggle .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .lobby-input {
+    padding: 14px 16px;
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .lobby-btn {
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  .status-box {
+    padding: 15px;
+    margin: 15px 0;
+  }
+
+  .status-text {
+    font-size: 13px;
+  }
+
+  .friend-joined {
+    font-size: 14px;
+  }
+
+  .start-call-btn {
+    padding: 16px;
+    font-size: 16px;
+  }
+
+  .incoming-call {
+    margin-top: 15px;
+    padding: 15px;
+  }
+
+  .incoming-animation {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 12px;
+  }
+
+  .incoming-text {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .answer-btn {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+  
   .pip-video-container {
     width: 90px;
     height: 120px;
@@ -1334,20 +1716,39 @@ body {
     right: 12px;
   }
   
-  .control-btn {
-    width: 52px;
-    height: 52px;
-    font-size: 22px;
+  .control-btn-modern {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .control-btn-modern .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hang-up-red {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .hang-up-btn-always {
+    width: 56px;
+    height: 56px;
+    bottom: 20px;
+  }
+
+  .hang-up-btn-always .icon {
+    width: 24px;
+    height: 24px;
   }
   
   .controls-group {
-    gap: 12px;
+    gap: 10px;
+    padding: 8px 14px;
   }
   
-  .hang-up-btn {
-    width: 64px;
-    height: 64px;
-    bottom: 25px;
+  .bottom-bar {
+    bottom: 95px;
   }
   
   .call-duration {
@@ -1362,6 +1763,50 @@ body {
 
 /* Landscape mode adjustments */
 @media (max-width: 768px) and (orientation: landscape) {
+  .lobby-container {
+    padding: 10px;
+  }
+
+  .lobby-card {
+    padding: 20px;
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lobby-title {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .lobby-subtitle {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .video-preview {
+    height: 150px;
+  }
+
+  .video-preview-container {
+    margin-bottom: 12px;
+  }
+
+  .lobby-form {
+    margin-bottom: 15px;
+  }
+
+  .status-box {
+    padding: 10px;
+    margin: 10px 0;
+  }
+
+  .incoming-call {
+    padding: 12px;
+    margin-top: 12px;
+  }
+
   .pip-video-container {
     width: 80px;
     height: 100px;
@@ -1370,19 +1815,37 @@ body {
   }
   
   .bottom-bar {
-    padding-bottom: 90px;
+    bottom: 85px;
+  }
+
+  .hang-up-btn-always {
+    width: 52px;
+    height: 52px;
+    bottom: 15px;
+  }
+
+  .hang-up-btn-always .icon {
+    width: 22px;
+    height: 22px;
   }
   
-  .hang-up-btn {
-    width: 56px;
-    height: 56px;
-    bottom: 20px;
+  .control-btn-modern {
+    width: 44px;
+    height: 44px;
   }
   
-  .control-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
+  .control-btn-modern .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hang-up-red {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .controls-group {
+    padding: 8px 14px;
   }
 }
 
