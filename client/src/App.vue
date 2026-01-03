@@ -348,7 +348,7 @@ const callAccepted = ref(false);
 const callEnded = ref(false);
 
 // Video quality control
-const selectedQuality = ref('medium');
+const selectedQuality = ref('ultra');
 
 // Audio quality control
 const selectedAudioQuality = ref('studio');
