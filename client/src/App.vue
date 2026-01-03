@@ -5,6 +5,21 @@
       <h1 class="lobby-title">🔒 Private Video Chat</h1>
       <p class="lobby-subtitle">Connect securely with anyone, anywhere</p>
       
+      <!-- Video Preview -->
+      <div class="video-preview-container">
+        <video 
+          ref="myVideo" 
+          muted 
+          autoplay 
+          playsinline 
+          class="video-preview"
+        ></video>
+        <div v-if="!cameraEnabled" class="camera-off-message">
+          <span class="camera-icon">📷</span>
+          <p>Camera is off</p>
+        </div>
+      </div>
+      
       <div class="lobby-form">
         <input 
           v-model="roomId" 
@@ -269,10 +284,16 @@ onMounted(async () => {
   // Get available cameras
   await enumerateCameras();
   
-  // Get Camera/Mic Permissions - Start with camera OFF
+  // Get Camera/Mic Permissions - Start with camera ON
   try {
+    const quality = qualityPresets[selectedQuality.value];
     const constraints = {
-      video: false, // Start with camera off
+      video: {
+        width: { ideal: quality.width },
+        height: { ideal: quality.height },
+        frameRate: { ideal: quality.frameRate },
+        facingMode: facingMode.value
+      },
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
@@ -286,7 +307,10 @@ onMounted(async () => {
     const currentStream = await navigator.mediaDevices.getUserMedia(constraints);
     stream.value = currentStream;
     if (myVideo.value) myVideo.value.srcObject = currentStream;
+    cameraEnabled.value = true; // Mark camera as enabled
+    videoEnabled.value = true;
   } catch (err) {
+    console.error("Media access error:", err);
     alert("Please allow camera and microphone access!");
   }
 
@@ -726,7 +750,49 @@ body {
 .lobby-subtitle {
   color: #718096;
   font-size: 16px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
+}
+
+.video-preview-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 30px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #1a1a1a;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.video-preview {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+.camera-off-message {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #1a1a1a;
+  color: white;
+}
+
+.camera-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.camera-off-message p {
+  font-size: 16px;
+  color: #a0aec0;
 }
 
 .lobby-form {
