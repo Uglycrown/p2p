@@ -68,10 +68,13 @@
         <button @click="generateSecureRoomName" class="lobby-btn secondary-btn">
           🔒 Generate Secure Room
         </button>
-        <button @click="joinRoom" class="lobby-btn primary-btn">
-          <span v-if="!myId">{{ isCreatingRoom ? 'Create Room' : 'Join Room' }}</span>
+        <button @click="joinRoom" class="lobby-btn primary-btn" :disabled="isJoining">
+          <span v-if="isJoining">⏳ Connecting...</span>
+          <span v-else-if="!myId">{{ isCreatingRoom ? 'Create Room' : 'Join Room' }}</span>
           <span v-else>Joined ✓</span>
         </button>
+        
+        <p v-if="joinError" class="error-message">{{ joinError }}</p>
       </div>
       
       <div v-if="myId" class="status-box">
@@ -348,6 +351,10 @@ const callerId = ref(null);
 const callAccepted = ref(false);
 const callEnded = ref(false);
 
+// Loading state
+const isJoining = ref(false);
+const joinError = ref('');
+
 // Video quality control - Default to 'high' for clear video
 const selectedQuality = ref('high');
 
@@ -529,12 +536,18 @@ const joinRoom = async () => {
     return;
   }
   
+  isJoining.value = true;
+  joinError.value = '';
+  
   try {
     // Phase 2: Check if room requires password or create with password
     const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
     
     console.log('🔍 Connecting to server:', serverUrl);
     console.log('🔍 Room ID:', roomId.value);
+    
+    // Show connecting message
+    alert('Connecting to server... This may take 30-60 seconds if server is sleeping.');
     
     // Check room info
     const roomInfoResponse = await fetch(`${serverUrl}/api/room-info/${roomId.value}`, {
@@ -629,7 +642,10 @@ const joinRoom = async () => {
   } catch (error) {
     console.error('❌ Error joining room:', error);
     console.error('❌ Error details:', error.message, error.stack);
+    joinError.value = `Failed: ${error.message}`;
     alert(`Failed to join room: ${error.message}. Check console for details.`);
+  } finally {
+    isJoining.value = false;
   }
 };
 

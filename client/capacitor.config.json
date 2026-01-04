@@ -4,8 +4,7 @@
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
-    "cleartext": true,
-    "hostname": "p2p-io70.onrender.com"
+    "cleartext": true
   },
   "android": {
     "allowMixedContent": true,
