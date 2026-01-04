@@ -793,7 +793,7 @@ const callUser = () => {
   // Create peer with current stream (may or may not have video)
   const peer = new SimplePeer({
     initiator: true,
-    trickle: false,
+    trickle: true,
     stream: stream.value,
     config: {
       iceServers: [
@@ -801,6 +801,8 @@ const callUser = () => {
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
         { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
         // TURN servers for difficult networks (relay)
         {
           urls: 'turn:openrelay.metered.ca:80',
@@ -818,7 +820,8 @@ const callUser = () => {
           credential: 'openrelayproject'
         }
       ],
-      iceCandidatePoolSize: 10
+      iceCandidatePoolSize: 10,
+      iceTransportPolicy: 'all'
     },
     offerOptions: {
       offerToReceiveAudio: true,
@@ -913,7 +916,7 @@ const answerCall = () => {
   // Create peer with current stream (may or may not have video)
   const peer = new SimplePeer({
     initiator: false,
-    trickle: false,
+    trickle: true,
     stream: stream.value,
     config: {
       iceServers: [
@@ -921,6 +924,8 @@ const answerCall = () => {
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
         { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
         // TURN servers for difficult networks (relay)
         {
           urls: 'turn:openrelay.metered.ca:80',
@@ -938,7 +943,8 @@ const answerCall = () => {
           credential: 'openrelayproject'
         }
       ],
-      iceCandidatePoolSize: 10
+      iceCandidatePoolSize: 10,
+      iceTransportPolicy: 'all'
     },
     answerOptions: {
       offerToReceiveAudio: true,
