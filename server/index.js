@@ -36,11 +36,12 @@ app.use(cors({
 		// Allow requests with no origin (like mobile apps or curl)
 		if (!origin) return callback(null, true);
 		
-		if (allowedOrigins.indexOf(origin) !== -1) {
+		if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('capacitor://') || origin.includes('ionic://')) {
 			callback(null, true);
 		} else {
 			console.log(`❌ Blocked origin: ${origin}`);
-			callback(new Error('Not allowed by CORS'));
+			// For development, allow all origins - CHANGE IN PRODUCTION
+			callback(null, true);
 		}
 	},
 	credentials: true
@@ -63,13 +64,14 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
 	cors: {
-		origin: allowedOrigins,
+		origin: "*", // Allow all origins for mobile apps
 		methods: ["GET", "POST"],
 		credentials: true
 	},
 	transports: ['websocket', 'polling'],
 	pingTimeout: 60000,
-	pingInterval: 25000
+	pingInterval: 25000,
+	allowEIO3: true // Support older clients
 });
 
 const PORT = process.env.PORT || 5000;
