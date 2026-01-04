@@ -36,11 +36,14 @@ app.use(cors({
 		// Allow requests with no origin (like mobile apps or curl)
 		if (!origin) return callback(null, true);
 		
-		if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('capacitor://') || origin.includes('ionic://')) {
+		// Allow localhost (for Capacitor apps)
+		if (origin && (origin.includes('localhost') || origin.includes('capacitor://') || origin.includes('ionic://') || origin.includes('https://localhost'))) {
+			callback(null, true);
+		} else if (allowedOrigins.indexOf(origin) !== -1) {
 			callback(null, true);
 		} else {
 			console.log(`❌ Blocked origin: ${origin}`);
-			// For development, allow all origins - CHANGE IN PRODUCTION
+			// For development, allow all origins
 			callback(null, true);
 		}
 	},
@@ -296,9 +299,14 @@ io.on("connection", (socket) => {
 	
 	// Security: Verify origin
 	if (clientOrigin && !allowedOrigins.includes(clientOrigin)) {
-		logSecurity('Unauthorized origin blocked', { origin: clientOrigin, ip: clientIp });
-		socket.disconnect(true);
-		return;
+		// Allow localhost variants (for Capacitor mobile apps)
+		if (clientOrigin.includes('localhost') || clientOrigin.includes('capacitor://') || clientOrigin.includes('ionic://')) {
+			console.log(`✅ Allowed mobile app origin: ${clientOrigin}`);
+		} else {
+			logSecurity('Unauthorized origin blocked', { origin: clientOrigin, ip: clientIp });
+			socket.disconnect(true);
+			return;
+		}
 	}
 	
 	// Security: Verify JWT token (if authentication is enabled)
