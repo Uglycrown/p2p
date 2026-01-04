@@ -533,9 +533,29 @@ const joinRoom = async () => {
     // Phase 2: Check if room requires password or create with password
     const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
     
+    console.log('🔍 Connecting to server:', serverUrl);
+    console.log('🔍 Room ID:', roomId.value);
+    
     // Check room info
-    const roomInfoResponse = await fetch(`${serverUrl}/api/room-info/${roomId.value}`);
+    const roomInfoResponse = await fetch(`${serverUrl}/api/room-info/${roomId.value}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+    
+    console.log('📡 Room info response status:', roomInfoResponse.status);
+    
+    if (!roomInfoResponse.ok) {
+      const errorText = await roomInfoResponse.text();
+      console.error('❌ Room info error:', errorText);
+      alert(`Server error: ${roomInfoResponse.status} - ${errorText}`);
+      return;
+    }
+    
     const roomInfo = await roomInfoResponse.json();
+    console.log('✅ Room info:', roomInfo);
     
     if (roomInfo.isFull) {
       alert("Room is full! Only 2 people allowed.");
@@ -556,23 +576,34 @@ const joinRoom = async () => {
       password: roomPassword.value || undefined
     };
     
+    console.log('📤 Sending token request to:', `${serverUrl}${endpoint}`);
+    
     const response = await fetch(`${serverUrl}${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify(body)
     });
     
+    console.log('📡 Token response status:', response.status);
+    
     if (!response.ok) {
       const error = await response.json();
+      console.error('❌ Token error:', error);
       alert(error.error || 'Failed to join room');
       return;
     }
     
     const data = await response.json();
+    console.log('✅ Got token:', data.token ? 'yes' : 'no');
     authToken.value = data.token;
     
     // Initialize E2E encryption
     e2eEncryption.value = new E2EEncryption(roomId.value, roomPassword.value);
+    
+    console.log('🔌 Connecting socket to:', serverUrl);
     
     // Reconnect socket with new token
     if (socket.value) {
@@ -580,7 +611,11 @@ const joinRoom = async () => {
     }
     
     socket.value = io(serverUrl, {
-      auth: { token: authToken.value }
+      auth: { token: authToken.value },
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     });
     
     // Re-setup socket listeners
@@ -593,7 +628,8 @@ const joinRoom = async () => {
     
   } catch (error) {
     console.error('❌ Error joining room:', error);
-    alert('Failed to join room. Please try again.');
+    console.error('❌ Error details:', error.message, error.stack);
+    alert(`Failed to join room: ${error.message}. Check console for details.`);
   }
 };
 

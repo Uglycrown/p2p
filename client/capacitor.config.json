@@ -4,11 +4,12 @@
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
-    "cleartext": true
+    "cleartext": true,
+    "hostname": "p2p-io70.onrender.com"
   },
   "android": {
     "allowMixedContent": true,
-    "webContentsDebuggingEnabled": false,
+    "webContentsDebuggingEnabled": true,
     "useLegacyBridge": false,
     "backgroundColor": "#667eea"
   },
