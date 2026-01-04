@@ -2483,10 +2483,11 @@ body {
   .controls-group {
     gap: 12px;
     padding: 10px 16px;
+    padding-bottom: 20px;
   }
 
   .bottom-bar {
-    bottom: 40px;
+    bottom: max(40px, env(safe-area-inset-bottom));
   }
 
   .settings-panel {
@@ -2635,10 +2636,11 @@ body {
   .controls-group {
     gap: 10px;
     padding: 8px 14px;
+    padding-bottom: 18px;
   }
   
   .bottom-bar {
-    bottom: 35px;
+    bottom: max(35px, env(safe-area-inset-bottom));
   }
   
   .call-duration {
@@ -2705,7 +2707,7 @@ body {
   }
   
   .bottom-bar {
-    bottom: 25px;
+    bottom: max(25px, env(safe-area-inset-bottom));
   }
   
   .control-btn-modern {
@@ -2725,6 +2727,7 @@ body {
 
   .controls-group {
     padding: 8px 14px;
+    padding-bottom: 16px;
   }
 }
 
