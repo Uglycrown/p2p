@@ -758,6 +758,38 @@ const joinWithPassword = async () => {
 const callUser = () => {
   isCalling.value = true;
   
+  console.log('📞 Calling user...');
+  console.log('📹 Local stream:', stream.value);
+  console.log('📹 Stream tracks:', stream.value ? stream.value.getTracks() : 'No stream');
+  console.log('📹 Camera enabled:', cameraEnabled.value);
+  console.log('📹 Video enabled:', videoEnabled.value);
+  
+  // Ensure we have media stream with ACTIVE tracks
+  if (!stream.value) {
+    console.error('❌ No media stream available!');
+    alert('No camera/microphone access. Please restart the app and grant permissions.');
+    isCalling.value = false;
+    return;
+  }
+  
+  const tracks = stream.value.getTracks();
+  const activeTracks = tracks.filter(track => track.readyState === 'live');
+  
+  console.log('📹 Total tracks:', tracks.length);
+  console.log('📹 Active tracks:', activeTracks.length);
+  
+  if (activeTracks.length === 0) {
+    console.error('❌ No active tracks in stream!');
+    alert('Camera/Microphone not active. Please enable camera and try again.');
+    isCalling.value = false;
+    return;
+  }
+  
+  // Log each track
+  tracks.forEach(track => {
+    console.log(`📹 Track: ${track.kind} - ${track.label} - State: ${track.readyState}`);
+  });
+  
   // Create peer with current stream (may or may not have video)
   const peer = new SimplePeer({
     initiator: true,
@@ -814,6 +846,8 @@ const callUser = () => {
   });
 
   peer.on('stream', (userStream) => {
+    console.log('🎥 Received remote stream:', userStream);
+    console.log('🎥 Remote stream tracks:', userStream.getTracks());
     userVideo.value.srcObject = userStream;
     // Ensure video plays
     userVideo.value.play().catch(err => console.log('Autoplay prevented:', err));
@@ -847,6 +881,34 @@ const callUser = () => {
 const answerCall = () => {
   callAccepted.value = true;
   startCallTimer();
+  
+  console.log('📞 Answering call...');
+  console.log('📹 Local stream:', stream.value);
+  console.log('📹 Stream tracks:', stream.value ? stream.value.getTracks() : 'No stream');
+  
+  // Ensure we have media stream with ACTIVE tracks
+  if (!stream.value) {
+    console.error('❌ No media stream available when answering!');
+    alert('No camera/microphone access. Please restart the app.');
+    return;
+  }
+  
+  const tracks = stream.value.getTracks();
+  const activeTracks = tracks.filter(track => track.readyState === 'live');
+  
+  console.log('📹 Total tracks:', tracks.length);
+  console.log('📹 Active tracks:', activeTracks.length);
+  
+  if (activeTracks.length === 0) {
+    console.error('❌ No active tracks when answering!');
+    alert('Camera/Microphone not active. Please enable camera.');
+    return;
+  }
+  
+  // Log each track
+  tracks.forEach(track => {
+    console.log(`📹 Track: ${track.kind} - ${track.label} - State: ${track.readyState}`);
+  });
   
   // Create peer with current stream (may or may not have video)
   const peer = new SimplePeer({
