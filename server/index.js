@@ -47,13 +47,14 @@ app.use(cors({
 	credentials: true
 }));
 
-// Security: Rate limiting for API endpoints
+// Security: Rate limiting for API endpoints (relaxed for mobile testing)
 const apiLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 100, // Limit each IP to 100 requests per windowMs
+	windowMs: 1 * 60 * 1000, // 1 minute
+	max: 50, // Limit each IP to 50 requests per minute
 	message: { error: "Too many requests, please try again later" },
 	standardHeaders: true,
 	legacyHeaders: false,
+	skipSuccessfulRequests: true, // Don't count successful requests
 });
 
 app.use('/api/', apiLimiter);
@@ -83,8 +84,8 @@ const activeSessions = new Map();
 
 // Security: Track connection attempts per IP
 const connectionAttempts = new Map();
-const MAX_CONNECTIONS_PER_IP = 5;
-const CONNECTION_RESET_TIME = 60000; // 1 minute
+const MAX_CONNECTIONS_PER_IP = 20; // Increased for testing
+const CONNECTION_RESET_TIME = 30000; // 30 seconds (reduced reset time)
 
 // Security: Validate room ID
 function isValidRoomId(roomId) {
