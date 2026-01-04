@@ -681,17 +681,24 @@ const setupSocketListeners = () => {
         ? e2eEncryption.value.decryptSignal(data.signal)
         : data.signal;
         
-      incomingCall.value = true;
-      callerSignal.value = signal;
-      callerId.value = data.from;
-      
-      // Auto-answer call immediately
-      console.log("Incoming call detected! Auto-answering...");
-      setTimeout(() => {
-        if (!callAccepted.value) {
-          answerCall();
-        }
-      }, 100);
+      // If we haven't started the call yet, save caller info and signal
+      if (!incomingCall.value) {
+        incomingCall.value = true;
+        callerSignal.value = signal;
+        callerId.value = data.from;
+        
+        // Auto-answer call immediately
+        console.log("Incoming call detected! Auto-answering...");
+        setTimeout(() => {
+          if (!callAccepted.value) {
+            answerCall();
+          }
+        }, 100);
+      } else if (connectionRef.value && signal.candidate) {
+        // Handle trickled ICE candidates
+        console.log('📡 Received trickled ICE candidate');
+        connectionRef.value.signal(signal);
+      }
     } catch (error) {
       console.error('❌ Failed to decrypt signal:', error);
       alert('Failed to establish secure connection');
@@ -868,10 +875,17 @@ const callUser = () => {
         ? e2eEncryption.value.decryptSignal(signal)
         : signal;
         
-      callAccepted.value = true;
-      startCallTimer();
-      peer.signal(decryptedSignal);
-      resetControlsTimer();
+      // First callAccepted with offer/answer
+      if (!callAccepted.value) {
+        callAccepted.value = true;
+        startCallTimer();
+        peer.signal(decryptedSignal);
+        resetControlsTimer();
+      } else if (decryptedSignal.candidate && connectionRef.value) {
+        // Handle trickled ICE candidates
+        console.log('📡 Received trickled ICE candidate');
+        connectionRef.value.signal(decryptedSignal);
+      }
     } catch (error) {
       console.error('❌ Failed to decrypt signal:', error);
       alert('Failed to establish secure connection');
