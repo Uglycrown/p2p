@@ -22,5 +22,26 @@ export default defineConfig({
         global: 'globalThis'
       }
     }
+  },
+  build: {
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
+      }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue': ['vue'],
+          'socket': ['socket.io-client'],
+          'webrtc': ['simple-peer'],
+          'crypto': ['crypto-js']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
   }
 })

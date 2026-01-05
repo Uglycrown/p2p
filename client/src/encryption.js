@@ -15,8 +15,6 @@ export class E2EEncryption {
             keySize: 256/32,
             iterations: 10000
         }).toString();
-        
-        console.log('🔐 E2E encryption initialized');
     }
     
     /**
@@ -30,7 +28,6 @@ export class E2EEncryption {
             const encrypted = CryptoJS.AES.encrypt(jsonStr, this.key).toString();
             return encrypted;
         } catch (error) {
-            console.error('❌ Encryption failed:', error);
             throw error;
         }
     }
@@ -51,7 +48,6 @@ export class E2EEncryption {
             
             return JSON.parse(jsonStr);
         } catch (error) {
-            console.error('❌ Decryption failed:', error);
             throw error;
         }
     }

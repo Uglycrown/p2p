@@ -50,8 +50,10 @@ const securityFileRotateTransport = new winston.transports.DailyRotateFile({
     format: logFormat
 });
 
-// Create logger
-const logger = winston.createLogger({
+// Create logger (only in production or when LOG_ENABLED=true)
+const isLoggingEnabled = process.env.NODE_ENV === 'production' || process.env.LOG_ENABLED === 'true';
+
+const logger = isLoggingEnabled ? winston.createLogger({
     level: process.env.LOG_LEVEL || 'info',
     format: logFormat,
     transports: [
@@ -67,10 +69,15 @@ const logger = winston.createLogger({
     rejectionHandlers: [
         new winston.transports.File({ filename: 'logs/rejections.log' })
     ]
-});
+}) : {
+    info: () => {},
+    error: () => {},
+    warn: () => {},
+    debug: () => {}
+};
 
-// Security logger
-const securityLogger = winston.createLogger({
+// Security logger (only when enabled)
+const securityLogger = isLoggingEnabled ? winston.createLogger({
     level: 'info',
     format: logFormat,
     transports: [
@@ -79,9 +86,14 @@ const securityLogger = winston.createLogger({
             format: consoleFormat
         })
     ]
-});
+}) : {
+    info: () => {},
+    error: () => {},
+    warn: () => {},
+    debug: () => {}
+};
 
-// Helper functions
+// Helper functions (no-op when logging disabled)
 const logInfo = (message, metadata = {}) => {
     logger.info(message, metadata);
 };

@@ -42,7 +42,6 @@ app.use(cors({
 		} else if (allowedOrigins.indexOf(origin) !== -1) {
 			callback(null, true);
 		} else {
-			console.log(`❌ Blocked origin: ${origin}`);
 			// For development, allow all origins
 			callback(null, true);
 		}
@@ -193,7 +192,6 @@ app.post("/api/generate-room-token", async (req, res) => {
 				createdBy: userID
 			});
 			
-			console.log(`🔒 Room ${roomID} created with password protection`);
 		}
 		
 		// Generate JWT token
@@ -209,7 +207,6 @@ app.post("/api/generate-room-token", async (req, res) => {
 		});
 		
 	} catch (error) {
-		console.error('❌ Error generating token:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -237,7 +234,6 @@ app.post("/api/verify-room-password", async (req, res) => {
 		// Verify password
 		const isValid = await verifyPassword(password, roomData.hash);
 		if (!isValid) {
-			console.log(`❌ Invalid password attempt for room: ${roomID}`);
 			return res.status(401).json({ error: 'Incorrect password' });
 		}
 		
@@ -246,7 +242,6 @@ app.post("/api/verify-room-password", async (req, res) => {
 		const token = generateRoomToken(roomID, userID);
 		roomTokens.set(userID, { roomID, token, createdAt: Date.now() });
 		
-		console.log(`✅ User ${userID} authenticated for room: ${roomID}`);
 		
 		res.json({ 
 			success: true,
@@ -256,7 +251,6 @@ app.post("/api/verify-room-password", async (req, res) => {
 		});
 		
 	} catch (error) {
-		console.error('❌ Error verifying password:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -301,7 +295,6 @@ io.on("connection", (socket) => {
 	if (clientOrigin && !allowedOrigins.includes(clientOrigin)) {
 		// Allow localhost variants (for Capacitor mobile apps)
 		if (clientOrigin.includes('localhost') || clientOrigin.includes('capacitor://') || clientOrigin.includes('ionic://')) {
-			console.log(`✅ Allowed mobile app origin: ${clientOrigin}`);
 		} else {
 			logSecurity('Unauthorized origin blocked', { origin: clientOrigin, ip: clientIp });
 			socket.disconnect(true);
@@ -393,7 +386,6 @@ io.on("connection", (socket) => {
 
     // 4. End Call
     socket.on("endCall", (roomID) => {
-        console.log(`Call ended in room: ${roomID}`);
         socket.to(roomID).emit("callEnded");
     });
     

@@ -4,7 +4,6 @@ const crypto = require('crypto');
 // Secret key for JWT (In production, use environment variable!)
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 
-console.log('🔐 JWT Secret initialized');
 
 /**
  * Generate a room access token
@@ -41,7 +40,6 @@ const verifyRoomToken = (token) => {
         
         return decoded;
     } catch (err) {
-        console.error('❌ Token verification failed:', err.message);
         return null;
     }
 };

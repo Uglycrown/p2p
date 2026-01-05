@@ -4,24 +4,24 @@
     <div class="lobby-card">
       <h1 class="lobby-title">🔒 Private Video Chat</h1>
       <p class="lobby-subtitle">Connect securely with anyone, anywhere</p>
-      
+
       <!-- Video Preview -->
       <div class="video-preview-container">
-        <video 
-          ref="myVideo" 
-          muted 
-          autoplay 
-          playsinline 
+        <video
+          ref="myVideo"
+          muted
+          autoplay
+          playsinline
           class="video-preview"
         ></video>
         <div v-if="!cameraEnabled" class="camera-off-message">
           <span class="camera-icon">📷</span>
           <p>Camera is off</p>
         </div>
-        
+
         <!-- Camera Toggle Button (Overlay) -->
-        <button 
-          @click="toggleCameraLobby" 
+        <button
+          @click="toggleCameraLobby"
           class="lobby-camera-toggle"
           :title="cameraEnabled ? 'Turn Camera Off' : 'Turn Camera On'"
         >
@@ -36,27 +36,43 @@
           <span class="toggle-label">{{ cameraEnabled ? 'Camera On' : 'Camera Off' }}</span>
         </button>
       </div>
-      
+
       <div class="lobby-form">
-        <input 
-          v-model="roomId" 
-          placeholder="Enter Room Name (6+ characters)" 
-          class="lobby-input" 
-          @keyup.enter="joinRoom"
-        />
-        
+        <div class="room-input-container">
+          <input
+            v-model="roomId"
+            placeholder="Enter Room Name (6+ characters)"
+            class="lobby-input"
+            @keyup.enter="joinRoom"
+          />
+          <button 
+            v-if="roomId && roomId.length >= 6" 
+            @click="copyRoomName" 
+            class="copy-btn"
+            :title="copySuccess ? 'Copied!' : 'Copy Room Name'"
+          >
+            <svg v-if="!copySuccess" class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <svg v-else class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+        </div>
+
         <!-- Optional Password -->
         <div class="password-section">
           <label class="password-label">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               v-model="isCreatingRoom"
               class="password-checkbox"
             />
             <span>🔒 Create with password (optional)</span>
           </label>
-          
-          <input 
+
+          <input
             v-if="isCreatingRoom"
             v-model="roomPassword"
             type="password"
@@ -64,7 +80,7 @@
             class="lobby-input password-input"
           />
         </div>
-        
+
         <button @click="generateSecureRoomName" class="lobby-btn secondary-btn">
           🔒 Generate Secure Room
         </button>
@@ -73,10 +89,10 @@
           <span v-else-if="!myId">{{ isCreatingRoom ? 'Create Room' : 'Join Room' }}</span>
           <span v-else>Joined ✓</span>
         </button>
-        
+
         <p v-if="joinError" class="error-message">{{ joinError }}</p>
       </div>
-      
+
       <div v-if="myId" class="status-box">
         <div class="status-indicator"></div>
         <p class="status-text">Connected • Waiting for friend...</p>
@@ -91,15 +107,15 @@
     <div class="modal-content">
       <h2>🔒 Room Password Required</h2>
       <p>This room is password protected. Enter the password to join.</p>
-      
-      <input 
+
+      <input
         v-model="roomPassword"
         type="password"
         placeholder="Enter room password"
         class="modal-input"
         @keyup.enter="joinWithPassword"
       />
-      
+
       <div class="modal-buttons">
         <button @click="joinWithPassword" class="modal-btn primary">
           Join Room
@@ -112,31 +128,31 @@
   </div>
 
   <!-- Fullscreen Video Call (During Call) -->
-  <div 
-    v-if="callAccepted && !callEnded" 
+  <div
+    v-if="callAccepted && !callEnded"
     class="fullscreen-call"
     @click="handleScreenTap"
   >
     <!-- Main Video (Friend's video - Large) -->
-    <video 
-      ref="userVideo" 
-      autoplay 
-      playsinline 
+    <video
+      ref="userVideo"
+      autoplay
+      playsinline
       class="main-video"
     ></video>
-    
+
     <!-- Small Self Video (Picture-in-Picture) -->
     <div class="pip-video-container">
-      <video 
-        ref="myVideo" 
-        muted 
-        autoplay 
-        playsinline 
+      <video
+        ref="myVideo"
+        muted
+        autoplay
+        playsinline
         class="pip-video"
       ></video>
       <span class="pip-label">You</span>
     </div>
-    
+
     <!-- Top Bar (Info) - Auto-hide -->
     <transition name="fade">
       <div v-show="showControls" class="top-bar">
@@ -144,10 +160,10 @@
           <div class="call-status-dot"></div>
           <span class="call-duration">{{ callDuration }}</span>
         </div>
-        
+
         <!-- Settings Button -->
-        <button 
-          @click.stop="showSettings = !showSettings" 
+        <button
+          @click.stop="showSettings = !showSettings"
           class="settings-btn-top"
           title="Settings"
         >
@@ -158,14 +174,14 @@
         </button>
       </div>
     </transition>
-    
+
     <!-- Bottom Control Bar - Auto-hide -->
     <transition name="slide-up">
       <div v-show="showControls" class="bottom-bar">
         <div class="controls-group">
           <!-- Camera Toggle -->
-          <button 
-            @click.stop="toggleCamera" 
+          <button
+            @click.stop="toggleCamera"
             :class="['control-btn-modern', !cameraEnabled && 'btn-disabled']"
             :title="cameraEnabled ? 'Turn Camera Off' : 'Turn Camera On'"
           >
@@ -178,10 +194,10 @@
               <path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3 0h6l2-3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56"/>
             </svg>
           </button>
-          
+
           <!-- Screen Share Toggle -->
-          <button 
-            @click.stop="toggleScreenShare" 
+          <button
+            @click.stop="toggleScreenShare"
             :class="['control-btn-modern', isScreenSharing && 'btn-active']"
             title="Share Screen"
           >
@@ -192,11 +208,11 @@
               <polyline v-if="isScreenSharing" points="10 8 12 10 15 7" stroke-width="3"/>
             </svg>
           </button>
-          
+
           <!-- Switch Camera (Front/Rear) -->
-          <button 
+          <button
             v-if="availableCameras.length > 1 && cameraEnabled"
-            @click.stop="switchCamera" 
+            @click.stop="switchCamera"
             class="control-btn-modern"
             :title="facingMode === 'user' ? 'Switch to Rear Camera' : 'Switch to Front Camera'"
           >
@@ -205,11 +221,11 @@
               <path d="M22 15H11a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4h11"/>
             </svg>
           </button>
-          
+
           <!-- Camera Selector (Multi-camera devices) -->
-          <button 
+          <button
             v-if="availableCameras.length > 2 && cameraEnabled"
-            @click.stop="showCameraSelector = !showCameraSelector" 
+            @click.stop="showCameraSelector = !showCameraSelector"
             class="control-btn-modern"
             title="Select Camera"
           >
@@ -218,10 +234,10 @@
               <path d="M12 1v6m0 6v6M1 12h6m6 0h6"/>
             </svg>
           </button>
-          
+
           <!-- Audio Toggle -->
-          <button 
-            @click.stop="toggleAudio" 
+          <button
+            @click.stop="toggleAudio"
             :class="['control-btn-modern', !audioEnabled && 'btn-disabled']"
             :title="audioEnabled ? 'Mute' : 'Unmute'"
           >
@@ -239,10 +255,10 @@
               <line x1="8" y1="23" x2="16" y2="23"/>
             </svg>
           </button>
-          
+
           <!-- Hang Up Button -->
-          <button 
-            @click.stop="leaveCall" 
+          <button
+            @click.stop="leaveCall"
             class="control-btn-modern hang-up-red"
             title="End Call"
           >
@@ -253,15 +269,15 @@
         </div>
       </div>
     </transition>
-    
+
     <!-- Camera Selector Popup -->
     <transition name="fade">
       <div v-if="showCameraSelector" class="camera-selector-overlay" @click.self="showCameraSelector = false">
         <div class="camera-selector-panel">
           <h3>Select Camera</h3>
           <div class="camera-list">
-            <button 
-              v-for="camera in availableCameras" 
+            <button
+              v-for="camera in availableCameras"
               :key="camera.deviceId"
               @click="selectSpecificCamera(camera.deviceId)"
               :class="['camera-option', selectedCameraId === camera.deviceId && 'active']"
@@ -277,18 +293,18 @@
         </div>
       </div>
     </transition>
-    
+
     <!-- Settings Panel (Slide up) -->
     <transition name="slide-up">
       <div v-if="showSettings" class="settings-panel">
         <!-- Drag Handle -->
         <div class="settings-handle"></div>
-        
+
         <div class="settings-header">
           <h3>Call Settings</h3>
           <button @click="showSettings = false" class="close-btn">✕</button>
         </div>
-        
+
         <div class="settings-content">
           <div class="setting-item">
             <label>📹 Camera</label>
@@ -304,7 +320,7 @@
               </p>
             </div>
           </div>
-          
+
           <div class="setting-item">
             <label>📊 Video Quality</label>
             <select v-model="selectedQuality" @change="changeVideoQuality" class="settings-select">
@@ -316,7 +332,7 @@
             </select>
             <p class="quality-hint">720p (High) gives excellent clarity with good battery life</p>
           </div>
-          
+
           <div class="setting-item">
             <label>🎵 Audio Quality</label>
             <select v-model="selectedAudioQuality" @change="changeAudioQuality" class="settings-select">
@@ -401,6 +417,9 @@ const connectionStatus = ref('disconnected'); // 'connected', 'connecting', 'dis
 const isScreenSharing = ref(false);
 const screenStream = ref(null);
 
+// Copy room name functionality
+const copySuccess = ref(false);
+
 // Quality presets with bitrate - Optimized for BOTH quality AND battery
 const qualityPresets = {
   low: { width: 640, height: 360, frameRate: 15, bitrate: 300000 }, // 300 Kbps
@@ -446,10 +465,10 @@ onMounted(async () => {
     selectedQuality.value = 'hd';
     selectedAudioQuality.value = 'studio';
   }
-  
+
   // Get available cameras
   await enumerateCameras();
-  
+
   // Get Camera/Mic Permissions - Start with camera ON
   try {
     const quality = qualityPresets[selectedQuality.value];
@@ -491,17 +510,50 @@ onMounted(async () => {
   setupSocketListeners();
 });
 
+// Copy room name to clipboard
+const copyRoomName = async () => {
+  if (!roomId.value) return;
+  
+  try {
+    await navigator.clipboard.writeText(roomId.value);
+    copySuccess.value = true;
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+      copySuccess.value = false;
+    }, 2000);
+  } catch (err) {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = roomId.value;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      copySuccess.value = true;
+      setTimeout(() => {
+        copySuccess.value = false;
+      }, 2000);
+    } catch (e) {
+      alert('Failed to copy room name');
+    }
+    document.body.removeChild(textArea);
+  }
+};
+
 // Security: Generate secure room name
 const generateSecureRoomName = () => {
   // Generate cryptographically secure random room name
   const array = new Uint8Array(12);
   crypto.getRandomValues(array);
-  
+
   // Convert to base36 (0-9, a-z) and format nicely
-  const roomName = Array.from(array, byte => 
+  const roomName = Array.from(array, byte =>
     byte.toString(36).padStart(2, '0')
   ).join('').substring(0, 16);
-  
+
   // Format with dashes for readability
   const formatted = roomName.match(/.{1,4}/g).join('-');
   roomId.value = formatted;
@@ -512,35 +564,32 @@ const validateRoomName = (name) => {
   if (!name || name.length < 6) {
     return "Room name must be at least 6 characters";
   }
-  
+
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
     return "Room name can only contain letters, numbers, dashes, and underscores";
   }
-  
+
   return null;
 };
 
 // 2. Logic Functions
 const joinRoom = async () => {
   if(!roomId.value) return alert("Enter a room name!");
-  
+
   // Security: Validate room name
   const validationError = validateRoomName(roomId.value);
   if (validationError) {
     alert(validationError);
     return;
   }
-  
+
   isJoining.value = true;
   joinError.value = '';
-  
+
   try {
     // Phase 2: Check if room requires password or create with password
     const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
-    
-    // Show connecting message
-    alert('Connecting to server... This may take 30-60 seconds if server is sleeping.');
-    
+
     // Check room info
     const roomInfoResponse = await fetch(`${serverUrl}/api/room-info/${roomId.value}`, {
       method: 'GET',
@@ -549,63 +598,63 @@ const joinRoom = async () => {
         'Accept': 'application/json'
       }
     });
-    
+
     if (!roomInfoResponse.ok) {
       const errorText = await roomInfoResponse.text();
       alert(`Server error: ${roomInfoResponse.status} - ${errorText}`);
       return;
     }
-    
+
     const roomInfo = await roomInfoResponse.json();
-    
+
     if (roomInfo.isFull) {
       alert("Room is full! Only 2 people allowed.");
       return;
     }
-    
+
     // If room has password and we're joining (not creating)
     if (roomInfo.hasPassword && !isCreatingRoom.value) {
       roomHasPassword.value = true;
       showPasswordModal.value = true;
       return; // Wait for password input
     }
-    
+
     // If creating room with password or joining without password
     const endpoint = isCreatingRoom.value ? '/api/generate-room-token' : '/api/generate-room-token';
     const body = {
       roomID: roomId.value,
       password: roomPassword.value || undefined
     };
-    
-    
+
+
     const response = await fetch(`${serverUrl}${endpoint}`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
       body: JSON.stringify(body)
     });
-    
-    
+
+
     if (!response.ok) {
       const error = await response.json();
         alert(error.error || 'Failed to join room');
       return;
     }
-    
+
     const data = await response.json();
     authToken.value = data.token;
-    
+
     // Initialize E2E encryption
     e2eEncryption.value = new E2EEncryption(roomId.value, roomPassword.value);
-    
-    
+
+
     // Reconnect socket with new token
     if (socket.value) {
       socket.value.disconnect();
     }
-    
+
     socket.value = io(serverUrl, {
       auth: { token: authToken.value },
       transports: ['websocket', 'polling'],
@@ -613,14 +662,14 @@ const joinRoom = async () => {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000
     });
-    
+
     // Re-setup socket listeners
     setupSocketListeners();
-    
+
     // Join the room
     socket.value.emit('joinRoom', roomId.value);
-    
-    
+
+
   } catch (error) {
     joinError.value = `Failed: ${error.message}`;
     alert(`Failed to join room: ${error.message}. Check console for details.`);
@@ -632,11 +681,11 @@ const joinRoom = async () => {
 // Setup socket event listeners
 const setupSocketListeners = () => {
   socket.value.on('me', (id) => myId.value = id);
-  
+
   socket.value.on('userJoined', (id) => {
     userJoined.value = true;
     callerId.value = id;
-    
+
     // Auto-start call immediately when friend joins
     setTimeout(() => {
       if (!callAccepted.value && !isCalling.value) {
@@ -644,11 +693,11 @@ const setupSocketListeners = () => {
       }
     }, 500);
   });
-  
+
   socket.value.on('roomFull', () => {
     alert("Room is full! Only 2 people allowed.");
   });
-  
+
   socket.value.on('error', (data) => {
     alert(data.message || "An error occurred");
   });
@@ -656,16 +705,16 @@ const setupSocketListeners = () => {
   socket.value.on('callUser', (data) => {
     // Phase 2: Decrypt signal if E2E encryption is enabled
     try {
-      const signal = e2eEncryption.value 
+      const signal = e2eEncryption.value
         ? e2eEncryption.value.decryptSignal(data.signal)
         : data.signal;
-        
+
       // If we haven't started the call yet, save caller info and signal
       if (!incomingCall.value) {
         incomingCall.value = true;
         callerSignal.value = signal;
         callerId.value = data.from;
-        
+
         // Auto-answer call immediately
             setTimeout(() => {
           if (!callAccepted.value) {
@@ -680,7 +729,7 @@ const setupSocketListeners = () => {
         alert('Failed to establish secure connection');
     }
   });
-  
+
   socket.value.on('callEnded', () => {
       endCallCleanup();
   });
@@ -692,10 +741,10 @@ const joinWithPassword = async () => {
     alert('Password must be at least 8 characters');
     return;
   }
-  
+
   try {
     const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
-    
+
     const response = await fetch(`${serverUrl}/api/verify-room-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -704,33 +753,33 @@ const joinWithPassword = async () => {
         password: roomPassword.value
       })
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       alert(error.error || 'Incorrect password');
       return;
     }
-    
+
     const data = await response.json();
     authToken.value = data.token;
-    
+
     // Initialize E2E encryption with password
     e2eEncryption.value = new E2EEncryption(roomId.value, roomPassword.value);
-    
+
     // Reconnect with token
     if (socket.value) {
       socket.value.disconnect();
     }
-    
+
     socket.value = io(serverUrl, {
       auth: { token: authToken.value }
     });
-    
+
     setupSocketListeners();
     socket.value.emit('joinRoom', roomId.value);
-    
+
     showPasswordModal.value = false;
-    
+
   } catch (error) {
     alert('Failed to join room');
   }
@@ -738,36 +787,29 @@ const joinWithPassword = async () => {
 
 const callUser = () => {
   isCalling.value = true;
-  
-  console.log('📞 Calling user...');
-  console.log('📹 Local stream:', stream.value);
-  console.log('📹 Stream tracks:', stream.value ? stream.value.getTracks() : 'No stream');
-  console.log('📹 Camera enabled:', cameraEnabled.value);
-  console.log('📹 Video enabled:', videoEnabled.value);
-  
+
+
   // Ensure we have media stream with ACTIVE tracks
   if (!stream.value) {
     alert('No camera/microphone access. Please restart the app and grant permissions.');
     isCalling.value = false;
     return;
   }
-  
+
   const tracks = stream.value.getTracks();
   const activeTracks = tracks.filter(track => track.readyState === 'live');
-  
-  console.log('📹 Total tracks:', tracks.length);
-  console.log('📹 Active tracks:', activeTracks.length);
-  
+
+
   if (activeTracks.length === 0) {
     alert('Camera/Microphone not active. Please enable camera and try again.');
     isCalling.value = false;
     return;
   }
-  
+
   // Log each track
   tracks.forEach(track => {
   });
-  
+
   // Create peer with current stream (may or may not have video)
   const peer = new SimplePeer({
     initiator: true,
@@ -817,10 +859,10 @@ const callUser = () => {
 
   peer.on('signal', (data) => {
     // Phase 2: Encrypt signal if E2E encryption is enabled
-    const signalData = e2eEncryption.value 
+    const signalData = e2eEncryption.value
       ? e2eEncryption.value.encryptSignal(data)
       : data;
-      
+
     socket.value.emit('callUser', {
       userToCall: callerId.value,
       signalData: signalData,
@@ -829,38 +871,37 @@ const callUser = () => {
   });
 
   peer.on('stream', (userStream) => {
-    console.log('🎥 Remote stream tracks:', userStream.getTracks());
-    
+
     // Log each track
     userStream.getTracks().forEach(track => {
       });
-    
+
     userVideo.value.srcObject = userStream;
     // Ensure video plays
-    userVideo.value.play().catch(err => console.log('Autoplay prevented:', err));
-    
+    userVideo.value.play().catch(err => {});
+
     // Listen for track changes (when remote peer adds/removes tracks)
     userStream.onaddtrack = (event) => {
         // Refresh video element
       if (userVideo.value) {
         userVideo.value.srcObject = userStream;
-        userVideo.value.play().catch(err => console.log('Play error:', err));
+        userVideo.value.play().catch(err => {});
       }
     };
-    
+
     userStream.onremovetrack = (event) => {
       };
   });
-  
+
   // Apply bitrate constraints after connection
   peer.on('connect', () => {
     applyBitrateConstraints(peer);
   });
-  
+
   // Monitor ICE connection state changes
   if (peer._pc) {
     peer._pc.oniceconnectionstatechange = () => {
-          
+
       // If connection is failing, log why
       if (peer._pc.iceConnectionState === 'failed' || peer._pc.connectionState === 'failed') {
             peer._pc.getStats().then(stats => {
@@ -871,26 +912,26 @@ const callUser = () => {
         });
       }
     };
-    
+
     peer._pc.onicegatheringstatechange = () => {
       };
-    
+
     peer._pc.onconnectionstatechange = () => {
       };
   }
-  
+
   // Handle errors
   peer.on('error', (err) => {
-    
+
     // Log connection states for debugging
     if (peer._pc) {
       }
-    
+
     // Don't alert on normal errors like renegotiation
     if (err.message && !err.message.includes('negotiation')) {
       }
   });
-  
+
   // Handle connection close
   peer.on('close', () => {
     if (peer._pc) {
@@ -900,10 +941,10 @@ const callUser = () => {
   socket.value.on('callAccepted', (signal) => {
     // Phase 2: Decrypt signal if E2E encryption is enabled
     try {
-      const decryptedSignal = e2eEncryption.value 
+      const decryptedSignal = e2eEncryption.value
         ? e2eEncryption.value.decryptSignal(signal)
         : signal;
-        
+
       // First callAccepted with offer/answer
       if (!callAccepted.value) {
         callAccepted.value = true;
@@ -925,32 +966,27 @@ const callUser = () => {
 const answerCall = () => {
   callAccepted.value = true;
   startCallTimer();
-  
-  console.log('📞 Answering call...');
-  console.log('📹 Local stream:', stream.value);
-  console.log('📹 Stream tracks:', stream.value ? stream.value.getTracks() : 'No stream');
-  
+
+
   // Ensure we have media stream with ACTIVE tracks
   if (!stream.value) {
     alert('No camera/microphone access. Please restart the app.');
     return;
   }
-  
+
   const tracks = stream.value.getTracks();
   const activeTracks = tracks.filter(track => track.readyState === 'live');
-  
-  console.log('📹 Total tracks:', tracks.length);
-  console.log('📹 Active tracks:', activeTracks.length);
-  
+
+
   if (activeTracks.length === 0) {
     alert('Camera/Microphone not active. Please enable camera.');
     return;
   }
-  
+
   // Log each track
   tracks.forEach(track => {
   });
-  
+
   // Create peer with current stream (may or may not have video)
   const peer = new SimplePeer({
     initiator: false,
@@ -1000,46 +1036,45 @@ const answerCall = () => {
 
   peer.on('signal', (data) => {
     // Phase 2: Encrypt signal if E2E encryption is enabled
-    const signalData = e2eEncryption.value 
+    const signalData = e2eEncryption.value
       ? e2eEncryption.value.encryptSignal(data)
       : data;
-      
+
     socket.value.emit('answerCall', { signal: signalData, to: callerId.value });
   });
 
   peer.on('stream', (userStream) => {
-    console.log('🎥 Remote stream tracks:', userStream.getTracks());
-    
+
     // Log each track
     userStream.getTracks().forEach(track => {
       });
-    
+
     userVideo.value.srcObject = userStream;
     // Ensure video plays
-    userVideo.value.play().catch(err => console.log('Autoplay prevented:', err));
-    
+    userVideo.value.play().catch(err => {});
+
     // Listen for track changes (when remote peer adds/removes tracks)
     userStream.onaddtrack = (event) => {
         // Refresh video element
       if (userVideo.value) {
         userVideo.value.srcObject = userStream;
-        userVideo.value.play().catch(err => console.log('Play error:', err));
+        userVideo.value.play().catch(err => {});
       }
     };
-    
+
     userStream.onremovetrack = (event) => {
       };
   });
-  
+
   // Apply bitrate constraints after connection
   peer.on('connect', () => {
     applyBitrateConstraints(peer);
   });
-  
+
   // Monitor ICE connection state changes
   if (peer._pc) {
     peer._pc.oniceconnectionstatechange = () => {
-          
+
       // If connection is failing, log why
       if (peer._pc.iceConnectionState === 'failed' || peer._pc.connectionState === 'failed') {
             peer._pc.getStats().then(stats => {
@@ -1050,26 +1085,26 @@ const answerCall = () => {
         });
       }
     };
-    
+
     peer._pc.onicegatheringstatechange = () => {
       };
-    
+
     peer._pc.onconnectionstatechange = () => {
       };
   }
-  
+
   // Handle errors
   peer.on('error', (err) => {
-    
+
     // Log connection states for debugging
     if (peer._pc) {
       }
-    
+
     // Don't alert on normal errors like renegotiation
     if (err.message && !err.message.includes('negotiation')) {
       }
   });
-  
+
   // Handle connection close
   peer.on('close', () => {
     if (peer._pc) {
@@ -1078,7 +1113,7 @@ const answerCall = () => {
 
   peer.signal(callerSignal.value);
   connectionRef.value = peer;
-  
+
   // Start auto-hide timer
   resetControlsTimer();
 };
@@ -1124,16 +1159,16 @@ const toggleCameraLobby = async () => {
         },
         audio: false
       };
-      
+
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       const newVideoTrack = newStream.getVideoTracks()[0];
-      
+
       stream.value.addTrack(newVideoTrack);
-      
+
       if (myVideo.value) {
         myVideo.value.srcObject = stream.value;
       }
-      
+
       cameraEnabled.value = true;
       videoEnabled.value = true;
     } catch (err) {
@@ -1151,7 +1186,7 @@ const toggleCamera = async () => {
       videoTrack.stop();
       stream.value.removeTrack(videoTrack);
     }
-    
+
     // If in a call, remove video track from peer connection
     if (connectionRef.value && connectionRef.value._pc) {
       const senders = connectionRef.value._pc.getSenders();
@@ -1160,7 +1195,7 @@ const toggleCamera = async () => {
         connectionRef.value._pc.removeTrack(videoSender);
       }
     }
-    
+
     cameraEnabled.value = false;
     videoEnabled.value = false;
   } else {
@@ -1176,33 +1211,33 @@ const toggleCamera = async () => {
         },
         audio: false
       };
-      
+
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       const newVideoTrack = newStream.getVideoTracks()[0];
-      
+
       stream.value.addTrack(newVideoTrack);
-      
+
       if (myVideo.value) {
         myVideo.value.srcObject = stream.value;
       }
-      
+
       // Add track to peer connection - FIXED for camera OFF at start
       if (connectionRef.value && connectionRef.value._pc) {
         const senders = connectionRef.value._pc.getSenders();
         const videoSender = senders.find(s => s.track?.kind === 'video');
-        
+
         if (videoSender) {
           // Replace existing video track
           await videoSender.replaceTrack(newVideoTrack);
               } else {
           // Add new video track if no sender exists (camera was OFF at start)
           connectionRef.value._pc.addTrack(newVideoTrack, stream.value);
-                
+
           // Simple-peer will automatically renegotiate when track is added
           // The 'negotiationneeded' event is handled internally by simple-peer
               }
       }
-      
+
       cameraEnabled.value = true;
       videoEnabled.value = true;
     } catch (err) {
@@ -1217,24 +1252,24 @@ const switchCamera = async () => {
     alert('Please turn on the camera first!');
     return;
   }
-  
+
   // Find next camera based on facing mode
   let targetCamera = null;
   const currentFacing = facingMode.value;
-  
+
   // Toggle facing mode
   facingMode.value = currentFacing === 'user' ? 'environment' : 'user';
-  
+
   // Try to find the main camera (not ultra-wide)
   if (facingMode.value === 'environment') {
     // Prefer main rear camera over ultra-wide
     // Labels usually contain keywords like "main", "back", or just "camera 0"
     const rearCameras = availableCameras.value.filter(cam => {
       const label = cam.label.toLowerCase();
-      return !label.includes('front') && !label.includes('user') && 
+      return !label.includes('front') && !label.includes('user') &&
              (label.includes('back') || label.includes('rear') || label.includes('environment'));
     });
-    
+
     // Prefer cameras without "ultra" or "wide" in the name
     targetCamera = rearCameras.find(cam => {
       const label = cam.label.toLowerCase();
@@ -1247,7 +1282,7 @@ const switchCamera = async () => {
       return label.includes('front') || label.includes('user');
     });
   }
-  
+
   try {
     // Stop current video track
     const oldVideoTrack = stream.value.getVideoTracks()[0];
@@ -1255,7 +1290,7 @@ const switchCamera = async () => {
       oldVideoTrack.stop();
       stream.value.removeTrack(oldVideoTrack);
     }
-    
+
     // Build constraints
     const quality = qualityPresets[selectedQuality.value];
     const constraints = {
@@ -1272,18 +1307,18 @@ const switchCamera = async () => {
       },
       audio: false
     };
-    
+
     const newStream = await navigator.mediaDevices.getUserMedia(constraints);
     const newVideoTrack = newStream.getVideoTracks()[0];
-    
+
     selectedCameraId.value = newVideoTrack.getSettings().deviceId;
-    
+
     stream.value.addTrack(newVideoTrack);
-    
+
     if (myVideo.value) {
       myVideo.value.srcObject = stream.value;
     }
-    
+
     // Replace track in peer connection
     if (connectionRef.value && connectionRef.value._pc) {
       const sender = connectionRef.value._pc.getSenders().find(s => s.track?.kind === 'video');
@@ -1304,7 +1339,7 @@ const selectSpecificCamera = async (deviceId) => {
     alert('Please turn on the camera first!');
     return;
   }
-  
+
   try {
     // Stop current video track
     const oldVideoTrack = stream.value.getVideoTracks()[0];
@@ -1312,7 +1347,7 @@ const selectSpecificCamera = async (deviceId) => {
       oldVideoTrack.stop();
       stream.value.removeTrack(oldVideoTrack);
     }
-    
+
     // Get new stream with selected camera
     const quality = qualityPresets[selectedQuality.value];
     const constraints = {
@@ -1324,25 +1359,25 @@ const selectSpecificCamera = async (deviceId) => {
       },
       audio: false
     };
-    
+
     const newStream = await navigator.mediaDevices.getUserMedia(constraints);
     const newVideoTrack = newStream.getVideoTracks()[0];
-    
+
     selectedCameraId.value = deviceId;
-    
+
     // Update facing mode based on camera label
     const camera = availableCameras.value.find(c => c.deviceId === deviceId);
     if (camera) {
       const label = camera.label.toLowerCase();
       facingMode.value = (label.includes('front') || label.includes('user')) ? 'user' : 'environment';
     }
-    
+
     stream.value.addTrack(newVideoTrack);
-    
+
     if (myVideo.value) {
       myVideo.value.srcObject = stream.value;
     }
-    
+
     // Replace track in peer connection
     if (connectionRef.value && connectionRef.value._pc) {
       const sender = connectionRef.value._pc.getSenders().find(s => s.track?.kind === 'video');
@@ -1350,7 +1385,7 @@ const selectSpecificCamera = async (deviceId) => {
         await sender.replaceTrack(newVideoTrack);
           }
     }
-    
+
     showCameraSelector.value = false;
   } catch (err) {
     alert('Could not switch to selected camera.');
@@ -1362,9 +1397,9 @@ const getCameraLabel = (camera) => {
   if (!camera.label || camera.label === '') {
     return `Camera ${availableCameras.value.indexOf(camera) + 1}`;
   }
-  
+
   const label = camera.label;
-  
+
   // Simplify common labels
   if (label.toLowerCase().includes('front')) return '📱 Front Camera';
   if (label.toLowerCase().includes('back') || label.toLowerCase().includes('rear')) {
@@ -1376,7 +1411,7 @@ const getCameraLabel = (camera) => {
     }
     return '📷 Main Camera';
   }
-  
+
   return camera.label;
 };
 
@@ -1396,7 +1431,7 @@ watch(() => userVideo.value?.srcObject, async (newSrcObject) => {
     userVideo.value.play().catch(err => {
         // Try again after a short delay
       setTimeout(() => {
-        userVideo.value?.play().catch(e => console.log('Retry failed:', e));
+        userVideo.value?.play().catch(e => {});
       }, 100);
     });
   }
@@ -1404,38 +1439,35 @@ watch(() => userVideo.value?.srcObject, async (newSrcObject) => {
 
 // Force VP9 codec for better compression (30-50% bandwidth savings)
 const preferVP9Codec = (sdp) => {
-  console.log('🎥 Applying VP9 codec for better quality and efficiency...');
-  
+
   // Prioritize VP9 codec
   sdp = sdp.replace(/m=video (\d+) RTP\/SAVPF (.+)\r\n/g, (match, port, codecs) => {
     const codecArray = codecs.split(' ');
-    
+
     // Find VP9 codecs
     const vp9Codecs = codecArray.filter(c => {
       const rtpmap = sdp.match(new RegExp(`a=rtpmap:${c} VP9`, 'i'));
       return rtpmap !== null;
     });
-    
+
     // Other codecs as fallback
     const otherCodecs = codecArray.filter(c => {
       const rtpmap = sdp.match(new RegExp(`a=rtpmap:${c} VP9`, 'i'));
       return rtpmap === null;
     });
-    
+
     // VP9 first, then fallbacks
     const reordered = [...vp9Codecs, ...otherCodecs].join(' ');
-    console.log(vp9Codecs.length > 0 ? '✅ VP9 codec enabled (30% better compression)' : '⚠️ VP9 not available, using H.264');
-    
+
     return `m=video ${port} RTP/SAVPF ${reordered}\r\n`;
   });
-  
+
   return sdp;
 };
 
 // Enable hardware acceleration for battery efficiency
 const enableHardwareAcceleration = (sdp) => {
-  console.log('⚡ Enabling hardware acceleration...');
-  
+
   // Add hardware acceleration hints to SDP
   // This tells the browser to use GPU encoding (much more battery efficient)
   if (sdp.includes('a=mid:video')) {
@@ -1443,47 +1475,43 @@ const enableHardwareAcceleration = (sdp) => {
       /a=mid:video\r\n/g,
       'a=mid:video\r\na=content:main\r\n'
     );
-    console.log('✅ Hardware acceleration enabled (uses GPU instead of CPU)');
   }
-  
+
   return sdp;
 };
 
 // Apply bitrate constraints for better quality with adaptive bitrate
 const applyBitrateConstraints = async (peer) => {
   if (!peer || !peer._pc) return;
-  
+
   try {
     const quality = qualityPresets[selectedQuality.value];
     const targetBitrate = quality.bitrate;
-    
-    console.log(`📊 Target bitrate: ${(targetBitrate / 1000000).toFixed(1)} Mbps`);
-    
+
+
     const sender = peer._pc.getSenders().find(s => s.track?.kind === 'video');
-    
+
     if (sender) {
       const parameters = sender.getParameters();
-      
+
       if (!parameters.encodings || parameters.encodings.length === 0) {
         parameters.encodings = [{}];
       }
-      
+
       // Adaptive bitrate: Set min, max, and target for smooth quality
       parameters.encodings[0].maxBitrate = targetBitrate;
       parameters.encodings[0].minBitrate = Math.floor(targetBitrate * 0.5); // 50% min for bad networks
       parameters.encodings[0].maxFramerate = quality.frameRate;
-      
+
       // Enable adaptive bitrate scaling
       parameters.encodings[0].scaleResolutionDownBy = 1; // No downscaling unless needed
       parameters.encodings[0].scalabilityMode = 'L1T1'; // Temporal scalability
-      
+
       // High priority for smooth video
       parameters.encodings[0].priority = 'high';
       parameters.encodings[0].networkPriority = 'high';
-      
+
       await sender.setParameters(parameters);
-      console.log(`✅ Adaptive bitrate enabled: ${(targetBitrate * 0.5 / 1000000).toFixed(1)}-${(targetBitrate / 1000000).toFixed(1)} Mbps`);
-      console.log(`🎬 Hardware acceleration active (GPU encoding for battery efficiency)`);
     }
   } catch (err) {
   }
@@ -1561,7 +1589,6 @@ const stopScreenShare = async () => {
     }
   }
 
-  console.log('✅ Screen sharing stopped');
 };
 
 const leaveCall = () => {
@@ -1571,13 +1598,13 @@ const leaveCall = () => {
 
 const endCallCleanup = () => {
     callEnded.value = true;
-    
+
     // Clear duration timer
     if (durationInterval) {
       clearInterval(durationInterval);
       durationInterval = null;
     }
-    
+
     if(connectionRef.value) connectionRef.value.destroy();
     window.location.reload(); // Simple reload to reset state
 };
@@ -1592,7 +1619,7 @@ const resetControlsTimer = () => {
   if (controlsTimeout) {
     clearTimeout(controlsTimeout);
   }
-  
+
   // Auto-hide after 3 seconds
   controlsTimeout = setTimeout(() => {
     if (!showSettings.value) {
@@ -1606,7 +1633,7 @@ let durationInterval = null;
 
 const startCallTimer = () => {
   callStartTime.value = Date.now();
-  
+
   // Use setInterval instead of requestAnimationFrame (much more efficient)
   durationInterval = setInterval(() => {
     if (!callAccepted.value || callEnded.value) {
@@ -1616,7 +1643,7 @@ const startCallTimer = () => {
       }
       return;
     }
-    
+
     const elapsed = Math.floor((Date.now() - callStartTime.value) / 1000);
     const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
     const seconds = (elapsed % 60).toString().padStart(2, '0');
@@ -1627,16 +1654,16 @@ const startCallTimer = () => {
 // 6. Change Video Quality
 const changeVideoQuality = async () => {
   if (!stream.value) return;
-  
+
   const quality = qualityPresets[selectedQuality.value];
-  
+
   try {
     // Stop current video track
     const oldVideoTrack = stream.value.getVideoTracks()[0];
     if (oldVideoTrack) {
       oldVideoTrack.stop();
     }
-    
+
     // Get new stream with updated quality
     const constraints = {
       video: {
@@ -1646,30 +1673,30 @@ const changeVideoQuality = async () => {
       },
       audio: false // Keep existing audio track
     };
-    
+
     const newStream = await navigator.mediaDevices.getUserMedia(constraints);
     const newVideoTrack = newStream.getVideoTracks()[0];
-    
+
     // Replace video track in current stream
     stream.value.removeTrack(oldVideoTrack);
     stream.value.addTrack(newVideoTrack);
-    
+
     // Update local video display
     if (myVideo.value) {
       myVideo.value.srcObject = stream.value;
     }
-    
+
     // Replace track in peer connection
     if (connectionRef.value && connectionRef.value._pc) {
       const sender = connectionRef.value._pc.getSenders().find(s => s.track && s.track.kind === 'video');
       if (sender) {
         await sender.replaceTrack(newVideoTrack);
-        
+
         // Re-apply bitrate constraints with new quality settings
         await applyBitrateConstraints(connectionRef.value);
       }
     }
-    
+
   } catch (err) {
     alert('Could not change video quality. Try again.');
   }
@@ -1678,16 +1705,16 @@ const changeVideoQuality = async () => {
 // 5. Change Audio Quality
 const changeAudioQuality = async () => {
   if (!stream.value) return;
-  
+
   const audioQuality = audioQualityPresets[selectedAudioQuality.value];
-  
+
   try {
     // Stop current audio track
     const oldAudioTrack = stream.value.getAudioTracks()[0];
     if (oldAudioTrack) {
       oldAudioTrack.stop();
     }
-    
+
     // Get new audio stream with updated quality
     const constraints = {
       audio: {
@@ -1701,19 +1728,19 @@ const changeAudioQuality = async () => {
       },
       video: false // Keep existing video track
     };
-    
+
     const newStream = await navigator.mediaDevices.getUserMedia(constraints);
     const newAudioTrack = newStream.getAudioTracks()[0];
-    
+
     // Replace audio track in current stream
     stream.value.removeTrack(oldAudioTrack);
     stream.value.addTrack(newAudioTrack);
-    
+
     // Update local audio
     if (myVideo.value) {
       myVideo.value.srcObject = stream.value;
     }
-    
+
     // Replace track in peer connection
     if (connectionRef.value && connectionRef.value._pc) {
       const sender = connectionRef.value._pc.getSenders().find(s => s.track && s.track.kind === 'audio');
@@ -1721,8 +1748,7 @@ const changeAudioQuality = async () => {
         await sender.replaceTrack(newAudioTrack);
       }
     }
-    
-    console.log(`Audio quality changed to ${selectedAudioQuality.value}: ${audioQuality.sampleRate}Hz, ${audioQuality.channelCount} channel(s)`);
+
   } catch (err) {
     alert('Could not change audio quality. Try again.');
   }
@@ -1893,6 +1919,54 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* Room Input Container with Copy Button */
+.room-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.room-input-container .lobby-input {
+  padding-right: 55px;
+}
+
+.copy-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.copy-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.copy-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.copy-icon {
+  width: 20px;
+  height: 20px;
+  stroke: #667eea;
+  transition: all 0.3s ease;
+}
+
+.copy-btn:hover .copy-icon {
+  stroke: #5568d3;
 }
 
 .lobby-input {
@@ -2746,28 +2820,28 @@ body {
   .settings-panel {
     max-height: 75vh;
   }
-  
+
   .settings-content {
     padding: 16px 14px 25px 14px;
     max-height: calc(75vh - 85px);
   }
-  
+
   .setting-item label {
     font-size: 12px;
     padding: 10px 14px 6px 14px;
   }
-  
+
   .settings-select {
     font-size: 16px;
     padding: 14px 14px;
     padding-right: 36px;
   }
-  
+
   .info-text {
     font-size: 16px;
     padding: 12px 14px;
   }
-  
+
   .info-text strong {
     font-size: 16px;
   }
@@ -2863,19 +2937,19 @@ body {
     padding: 12px 20px;
     font-size: 15px;
   }
-  
+
   .pip-video-container {
     width: 90px;
     height: 120px;
     top: 60px;
     right: 12px;
   }
-  
+
   .control-btn-modern {
     width: 44px;
     height: 44px;
   }
-  
+
   .control-btn-modern .icon {
     width: 20px;
     height: 20px;
@@ -2885,21 +2959,21 @@ body {
     width: 48px !important;
     height: 48px !important;
   }
-  
+
   .controls-group {
     gap: 10px;
     padding: 8px 14px;
     padding-bottom: 18px;
   }
-  
+
   .bottom-bar {
     bottom: max(35px, env(safe-area-inset-bottom));
   }
-  
+
   .call-duration {
     font-size: 14px;
   }
-  
+
   .pip-label {
     font-size: 11px;
     padding: 3px 8px;
@@ -2958,16 +3032,16 @@ body {
     top: 15px;
     right: 15px;
   }
-  
+
   .bottom-bar {
     bottom: max(25px, env(safe-area-inset-bottom));
   }
-  
+
   .control-btn-modern {
     width: 44px;
     height: 44px;
   }
-  
+
   .control-btn-modern .icon {
     width: 20px;
     height: 20px;
