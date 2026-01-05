@@ -891,9 +891,51 @@ const callUser = () => {
     applyBitrateConstraints(peer);
   });
   
+  // Monitor ICE connection state changes
+  if (peer._pc) {
+    peer._pc.oniceconnectionstatechange = () => {
+      console.log('🧊 ICE Connection State:', peer._pc.iceConnectionState);
+      console.log('🔗 Connection State:', peer._pc.connectionState);
+      
+      // If connection is failing, log why
+      if (peer._pc.iceConnectionState === 'failed' || peer._pc.connectionState === 'failed') {
+        console.error('❌ Connection failed. Checking ICE candidates...');
+        peer._pc.getStats().then(stats => {
+          stats.forEach(report => {
+            if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+              console.log('✅ Working candidate pair:', report);
+            }
+          });
+        });
+      }
+    };
+    
+    peer._pc.onicegatheringstatechange = () => {
+      console.log('📡 ICE Gathering State:', peer._pc.iceGatheringState);
+    };
+    
+    peer._pc.onconnectionstatechange = () => {
+      console.log('🔌 Connection State Changed:', peer._pc.connectionState);
+    };
+  }
+  
   // Handle errors
   peer.on('error', (err) => {
     console.error('❌ Peer connection error:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack
+    });
+    
+    // Log connection states for debugging
+    if (peer._pc) {
+      console.log('Current states:', {
+        iceConnectionState: peer._pc.iceConnectionState,
+        connectionState: peer._pc.connectionState,
+        signalingState: peer._pc.signalingState
+      });
+    }
+    
     // Don't alert on normal errors like renegotiation
     if (err.message && !err.message.includes('negotiation')) {
       console.warn('Non-critical peer error:', err.message);
@@ -903,6 +945,12 @@ const callUser = () => {
   // Handle connection close
   peer.on('close', () => {
     console.log('🔌 Peer connection closed');
+    if (peer._pc) {
+      console.log('Final states:', {
+        iceConnectionState: peer._pc.iceConnectionState,
+        connectionState: peer._pc.connectionState
+      });
+    }
   });
 
   socket.value.on('callAccepted', (signal) => {
@@ -1054,9 +1102,51 @@ const answerCall = () => {
     applyBitrateConstraints(peer);
   });
   
+  // Monitor ICE connection state changes
+  if (peer._pc) {
+    peer._pc.oniceconnectionstatechange = () => {
+      console.log('🧊 ICE Connection State:', peer._pc.iceConnectionState);
+      console.log('🔗 Connection State:', peer._pc.connectionState);
+      
+      // If connection is failing, log why
+      if (peer._pc.iceConnectionState === 'failed' || peer._pc.connectionState === 'failed') {
+        console.error('❌ Connection failed. Checking ICE candidates...');
+        peer._pc.getStats().then(stats => {
+          stats.forEach(report => {
+            if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+              console.log('✅ Working candidate pair:', report);
+            }
+          });
+        });
+      }
+    };
+    
+    peer._pc.onicegatheringstatechange = () => {
+      console.log('📡 ICE Gathering State:', peer._pc.iceGatheringState);
+    };
+    
+    peer._pc.onconnectionstatechange = () => {
+      console.log('🔌 Connection State Changed:', peer._pc.connectionState);
+    };
+  }
+  
   // Handle errors
   peer.on('error', (err) => {
     console.error('❌ Peer connection error:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack
+    });
+    
+    // Log connection states for debugging
+    if (peer._pc) {
+      console.log('Current states:', {
+        iceConnectionState: peer._pc.iceConnectionState,
+        connectionState: peer._pc.connectionState,
+        signalingState: peer._pc.signalingState
+      });
+    }
+    
     // Don't alert on normal errors like renegotiation
     if (err.message && !err.message.includes('negotiation')) {
       console.warn('Non-critical peer error:', err.message);
@@ -1066,6 +1156,12 @@ const answerCall = () => {
   // Handle connection close
   peer.on('close', () => {
     console.log('🔌 Peer connection closed');
+    if (peer._pc) {
+      console.log('Final states:', {
+        iceConnectionState: peer._pc.iceConnectionState,
+        connectionState: peer._pc.connectionState
+      });
+    }
   });
 
   peer.signal(callerSignal.value);
