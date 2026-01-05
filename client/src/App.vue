@@ -828,7 +828,9 @@ const callUser = () => {
         }
       ],
       iceCandidatePoolSize: 10,
-      iceTransportPolicy: 'all'
+      iceTransportPolicy: 'all',
+      // Enable for dynamic track changes
+      sdpSemantics: 'unified-plan'
     },
     offerOptions: {
       offerToReceiveAudio: true,
@@ -858,14 +860,49 @@ const callUser = () => {
   peer.on('stream', (userStream) => {
     console.log('🎥 Received remote stream:', userStream);
     console.log('🎥 Remote stream tracks:', userStream.getTracks());
+    
+    // Log each track
+    userStream.getTracks().forEach(track => {
+      console.log(`🎥 Remote track: ${track.kind} - ${track.label} - State: ${track.readyState} - Enabled: ${track.enabled}`);
+    });
+    
     userVideo.value.srcObject = userStream;
     // Ensure video plays
     userVideo.value.play().catch(err => console.log('Autoplay prevented:', err));
+    
+    // Listen for track changes (when remote peer adds/removes tracks)
+    userStream.onaddtrack = (event) => {
+      console.log('🎥 Remote track added:', event.track.kind);
+      // Refresh video element
+      if (userVideo.value) {
+        userVideo.value.srcObject = userStream;
+        userVideo.value.play().catch(err => console.log('Play error:', err));
+      }
+    };
+    
+    userStream.onremovetrack = (event) => {
+      console.log('🎥 Remote track removed:', event.track.kind);
+    };
   });
   
   // Apply bitrate constraints after connection
   peer.on('connect', () => {
+    console.log('✅ Peer connected successfully');
     applyBitrateConstraints(peer);
+  });
+  
+  // Handle errors
+  peer.on('error', (err) => {
+    console.error('❌ Peer connection error:', err);
+    // Don't alert on normal errors like renegotiation
+    if (err.message && !err.message.includes('negotiation')) {
+      console.warn('Non-critical peer error:', err.message);
+    }
+  });
+  
+  // Handle connection close
+  peer.on('close', () => {
+    console.log('🔌 Peer connection closed');
   });
 
   socket.value.on('callAccepted', (signal) => {
@@ -958,7 +995,9 @@ const answerCall = () => {
         }
       ],
       iceCandidatePoolSize: 10,
-      iceTransportPolicy: 'all'
+      iceTransportPolicy: 'all',
+      // Enable for dynamic track changes
+      sdpSemantics: 'unified-plan'
     },
     answerOptions: {
       offerToReceiveAudio: true,
@@ -982,14 +1021,51 @@ const answerCall = () => {
   });
 
   peer.on('stream', (userStream) => {
+    console.log('🎥 Received remote stream:', userStream);
+    console.log('🎥 Remote stream tracks:', userStream.getTracks());
+    
+    // Log each track
+    userStream.getTracks().forEach(track => {
+      console.log(`🎥 Remote track: ${track.kind} - ${track.label} - State: ${track.readyState} - Enabled: ${track.enabled}`);
+    });
+    
     userVideo.value.srcObject = userStream;
     // Ensure video plays
     userVideo.value.play().catch(err => console.log('Autoplay prevented:', err));
+    
+    // Listen for track changes (when remote peer adds/removes tracks)
+    userStream.onaddtrack = (event) => {
+      console.log('🎥 Remote track added:', event.track.kind);
+      // Refresh video element
+      if (userVideo.value) {
+        userVideo.value.srcObject = userStream;
+        userVideo.value.play().catch(err => console.log('Play error:', err));
+      }
+    };
+    
+    userStream.onremovetrack = (event) => {
+      console.log('🎥 Remote track removed:', event.track.kind);
+    };
   });
   
   // Apply bitrate constraints after connection
   peer.on('connect', () => {
+    console.log('✅ Peer connected successfully');
     applyBitrateConstraints(peer);
+  });
+  
+  // Handle errors
+  peer.on('error', (err) => {
+    console.error('❌ Peer connection error:', err);
+    // Don't alert on normal errors like renegotiation
+    if (err.message && !err.message.includes('negotiation')) {
+      console.warn('Non-critical peer error:', err.message);
+    }
+  });
+  
+  // Handle connection close
+  peer.on('close', () => {
+    console.log('🔌 Peer connection closed');
   });
 
   peer.signal(callerSignal.value);
@@ -1106,16 +1182,20 @@ const toggleCamera = async () => {
       // Add track to peer connection - FIXED for camera OFF at start
       if (connectionRef.value && connectionRef.value._pc) {
         const senders = connectionRef.value._pc.getSenders();
-        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        const videoSender = senders.find(s => s.track?.kind === 'video');
         
         if (videoSender) {
           // Replace existing video track
           await videoSender.replaceTrack(newVideoTrack);
-          console.log('Video track replaced in peer connection');
+          console.log('✅ Video track replaced in peer connection');
         } else {
           // Add new video track if no sender exists (camera was OFF at start)
           connectionRef.value._pc.addTrack(newVideoTrack, stream.value);
-          console.log('Video track added to peer connection');
+          console.log('✅ Video track added to peer connection');
+          
+          // Simple-peer will automatically renegotiate when track is added
+          // The 'negotiationneeded' event is handled internally by simple-peer
+          console.log('🔄 Renegotiation will happen automatically...');
         }
       }
       
@@ -1203,13 +1283,12 @@ const switchCamera = async () => {
     
     // Replace track in peer connection
     if (connectionRef.value && connectionRef.value._pc) {
-      const sender = connectionRef.value._pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      const sender = connectionRef.value._pc.getSenders().find(s => s.track?.kind === 'video');
       if (sender) {
         await sender.replaceTrack(newVideoTrack);
+        console.log(`✅ Camera switched to ${facingMode.value === 'user' ? 'front' : 'rear'}: ${targetCamera?.label}`);
       }
     }
-    
-    console.log(`Camera switched to ${facingMode.value === 'user' ? 'front' : 'rear (main)'}`, targetCamera?.label);
   } catch (err) {
     console.error('Failed to switch camera:', err);
     alert('Could not switch camera. Your device may not have multiple cameras.');
@@ -1265,14 +1344,14 @@ const selectSpecificCamera = async (deviceId) => {
     
     // Replace track in peer connection
     if (connectionRef.value && connectionRef.value._pc) {
-      const sender = connectionRef.value._pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      const sender = connectionRef.value._pc.getSenders().find(s => s.track?.kind === 'video');
       if (sender) {
         await sender.replaceTrack(newVideoTrack);
+        console.log(`✅ Camera changed to: ${camera?.label}`);
       }
     }
     
     showCameraSelector.value = false;
-    console.log(`Camera changed to: ${camera?.label}`);
   } catch (err) {
     console.error('Failed to select camera:', err);
     alert('Could not switch to selected camera.');
