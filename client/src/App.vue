@@ -132,6 +132,8 @@
     v-if="callAccepted && !callEnded"
     class="fullscreen-call"
     @click="handleScreenTap"
+    @mousemove="handleScreenTap"
+    @touchstart="handleScreenTap"
   >
     <!-- Main Video (Friend's video - Large) -->
     <video
@@ -167,9 +169,9 @@
           class="settings-btn-top"
           title="Settings"
         >
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v6m0 6v6M3.93 3.93l4.24 4.24m5.66 5.66l4.24 4.24M1 12h6m6 0h6M3.93 20.07l4.24-4.24m5.66-5.66l4.24-4.24"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 ația 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
         </button>
       </div>
@@ -810,6 +812,14 @@ const callUser = () => {
   tracks.forEach(track => {
   });
 
+  // IMPORTANT: Set myVideo srcObject immediately when call starts
+  nextTick(() => {
+    if (myVideo.value && stream.value) {
+      myVideo.value.srcObject = stream.value;
+      myVideo.value.play().catch(err => {});
+    }
+  });
+
   // Create peer with current stream (may or may not have video)
   const peer = new SimplePeer({
     initiator: true,
@@ -985,6 +995,14 @@ const answerCall = () => {
 
   // Log each track
   tracks.forEach(track => {
+  });
+
+  // IMPORTANT: Set myVideo srcObject immediately when call starts
+  nextTick(() => {
+    if (myVideo.value && stream.value) {
+      myVideo.value.srcObject = stream.value;
+      myVideo.value.play().catch(err => {});
+    }
   });
 
   // Create peer with current stream (may or may not have video)
@@ -1437,6 +1455,38 @@ watch(() => userVideo.value?.srcObject, async (newSrcObject) => {
   }
 });
 
+// Watch settings and camera selector - keep controls visible when they're open
+watch([() => showSettings.value, () => showCameraSelector.value], ([settings, camera]) => {
+  if (settings || camera) {
+    showControls.value = true;
+    if (controlsTimeout) {
+      clearTimeout(controlsTimeout);
+    }
+  } else {
+    // When closed, restart auto-hide timer
+    resetControlsTimer();
+  }
+});
+
+// Watch callAccepted - ensure myVideo is set when call starts
+watch(() => callAccepted.value, async (accepted) => {
+  if (accepted) {
+    await nextTick();
+    if (myVideo.value && stream.value) {
+      myVideo.value.srcObject = stream.value;
+      myVideo.value.play().catch(err => {
+        // Retry after a short delay
+        setTimeout(() => {
+          if (myVideo.value && stream.value) {
+            myVideo.value.srcObject = stream.value;
+            myVideo.value.play().catch(e => {});
+          }
+        }, 100);
+      });
+    }
+  }
+});
+
 // Force VP9 codec for better compression (30-50% bandwidth savings)
 const preferVP9Codec = (sdp) => {
 
@@ -1620,12 +1670,12 @@ const resetControlsTimer = () => {
     clearTimeout(controlsTimeout);
   }
 
-  // Auto-hide after 3 seconds
+  // Auto-hide after 5 seconds (longer for better UX)
   controlsTimeout = setTimeout(() => {
-    if (!showSettings.value) {
+    if (!showSettings.value && !showCameraSelector.value) {
       showControls.value = false;
     }
-  }, 3000);
+  }, 5000);
 };
 
 // 5. Call Duration Timer - Optimized to reduce CPU usage
@@ -1782,6 +1832,7 @@ body {
   /* Support for iPhone X notch and other safe areas */
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+  margin-bottom: 10px;
 }
 
 /* ==================== LOBBY SCREEN ==================== */
@@ -1791,21 +1842,39 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
   padding: 20px;
   overflow-y: auto; /* Allow scrolling on mobile */
+  position: relative;
+}
+
+.lobby-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(0, 191, 255, 0.15) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .lobby-card {
-  background: white;
+  background: linear-gradient(145deg, rgba(26, 26, 46, 0.95), rgba(15, 15, 15, 0.95));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(138, 43, 226, 0.3);
   border-radius: 24px;
   padding: 60px 40px;
   max-width: 480px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 100px rgba(138, 43, 226, 0.2);
   text-align: center;
   animation: fadeIn 0.5s ease;
   margin: auto; /* Center vertically */
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes fadeIn {
@@ -1815,13 +1884,18 @@ body {
 
 .lobby-title {
   font-size: 32px;
-  color: #2d3748;
+  color: #ffffff;
   margin-bottom: 12px;
   font-weight: 700;
+  text-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
+  background: linear-gradient(135deg, #ffffff 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .lobby-subtitle {
-  color: #718096;
+  color: #a0aec0;
   font-size: 16px;
   margin-bottom: 30px;
 }
@@ -1833,8 +1907,9 @@ body {
   margin: 0 auto 30px;
   border-radius: 16px;
   overflow: hidden;
-  background: #1a1a1a;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  background: #0a0a0a;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 40px rgba(138, 43, 226, 0.3);
+  border: 1px solid rgba(138, 43, 226, 0.2);
 }
 
 .video-preview {
@@ -1855,7 +1930,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: #1a1a1a;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
   color: white;
 }
 
@@ -1879,17 +1954,17 @@ body {
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(138, 43, 226, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid rgba(138, 43, 226, 0.5);
   border-radius: 50px;
   color: white;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(138, 43, 226, 0.4);
   z-index: 10;
 }
 
@@ -1900,10 +1975,10 @@ body {
 }
 
 .lobby-camera-toggle:hover {
-  background: rgba(0, 0, 0, 0.95);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(138, 43, 226, 0.5);
+  border-color: rgba(138, 43, 226, 0.8);
   transform: translateX(-50%) translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 24px rgba(138, 43, 226, 0.6);
 }
 
 .lobby-camera-toggle:active {
@@ -1939,7 +2014,7 @@ body {
   width: 40px;
   height: 40px;
   border: none;
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(138, 43, 226, 0.2);
   border-radius: 8px;
   cursor: pointer;
   display: flex;
@@ -1950,8 +2025,9 @@ body {
 }
 
 .copy-btn:hover {
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(138, 43, 226, 0.4);
   transform: translateY(-50%) scale(1.05);
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
 }
 
 .copy-btn:active {
@@ -1961,28 +2037,35 @@ body {
 .copy-icon {
   width: 20px;
   height: 20px;
-  stroke: #667eea;
+  stroke: #a78bfa;
   transition: all 0.3s ease;
 }
 
 .copy-btn:hover .copy-icon {
-  stroke: #5568d3;
+  stroke: #c4b5fd;
 }
 
 .lobby-input {
   width: 100%;
   padding: 16px 20px;
   font-size: 16px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid rgba(138, 43, 226, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
   border-radius: 12px;
   transition: all 0.3s;
   font-family: inherit;
 }
 
+.lobby-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
 .lobby-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: rgba(138, 43, 226, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.2), 0 0 20px rgba(138, 43, 226, 0.3);
 }
 
 .lobby-btn {
@@ -1998,14 +2081,16 @@ body {
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.5);
 }
 
 .primary-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.7), 0 0 60px rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, #9f7aea 0%, #7c3aed 100%);
 }
 
 .primary-btn:active {
@@ -2013,14 +2098,16 @@ body {
 }
 
 .secondary-btn {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+  box-shadow: 0 4px 20px rgba(138, 43, 226, 0.3);
+  border: 2px solid rgba(138, 43, 226, 0.5);
 }
 
 .secondary-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(72, 187, 120, 0.6);
+  box-shadow: 0 6px 30px rgba(138, 43, 226, 0.5);
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.3) 0%, rgba(99, 102, 241, 0.3) 100%);
 }
 
 .secondary-btn:active {
@@ -2039,7 +2126,7 @@ body {
   gap: 8px;
   cursor: pointer;
   font-size: 14px;
-  color: #4a5568;
+  color: #cbd5e0;
   margin-bottom: 8px;
   user-select: none;
 }
@@ -2067,8 +2154,9 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2077,12 +2165,15 @@ body {
 }
 
 .modal-content {
-  background: white;
+  background: linear-gradient(145deg, rgba(26, 26, 46, 0.98), rgba(15, 15, 15, 0.98));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(138, 43, 226, 0.3);
   border-radius: 20px;
   padding: 40px;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 100px rgba(138, 43, 226, 0.3);
   animation: slideUp 0.3s ease;
 }
 
@@ -2092,13 +2183,14 @@ body {
 }
 
 .modal-content h2 {
-  color: #2d3748;
+  color: #ffffff;
   margin-bottom: 12px;
   font-size: 24px;
+  text-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
 }
 
 .modal-content p {
-  color: #718096;
+  color: #a0aec0;
   margin-bottom: 24px;
   font-size: 14px;
 }
@@ -2107,17 +2199,24 @@ body {
   width: 100%;
   padding: 14px 18px;
   font-size: 15px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid rgba(138, 43, 226, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
   border-radius: 10px;
   margin-bottom: 20px;
   transition: all 0.3s;
   font-family: inherit;
 }
 
+.modal-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
 .modal-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: rgba(138, 43, 226, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.2), 0 0 20px rgba(138, 43, 226, 0.3);
 }
 
 .modal-buttons {
@@ -2137,29 +2236,37 @@ body {
 }
 
 .modal-btn.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
   color: white;
+  border: 1px solid rgba(139, 92, 246, 0.5);
 }
 
 .modal-btn.primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.6);
+  background: linear-gradient(135deg, #9f7aea 0%, #7c3aed 100%);
 }
 
 .modal-btn.secondary {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e0;
+  border: 2px solid rgba(138, 43, 226, 0.3);
 }
 
 .modal-btn.secondary:hover {
-  background: #cbd5e0;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(138, 43, 226, 0.5);
 }
 
 .status-box {
-  background: #f7fafc;
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(138, 43, 226, 0.3);
   padding: 20px;
   border-radius: 12px;
   margin: 20px 0;
+  box-shadow: 0 4px 20px rgba(138, 43, 226, 0.2);
 }
 
 .status-indicator {
@@ -2178,16 +2285,17 @@ body {
 }
 
 .status-text {
-  color: #4a5568;
+  color: #cbd5e0;
   font-size: 14px;
   margin-bottom: 10px;
 }
 
 .friend-joined {
-  color: #48bb78;
+  color: #a78bfa;
   font-weight: 600;
   font-size: 16px;
   animation: slideIn 0.5s ease;
+  text-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
 }
 
 @keyframes slideIn {
@@ -2226,10 +2334,13 @@ body {
 .incoming-call {
   margin-top: 30px;
   animation: bounceIn 0.6s ease;
-  background: rgba(102, 126, 234, 0.08);
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding: 25px;
   border-radius: 16px;
-  border: 2px solid rgba(102, 126, 234, 0.2);
+  border: 2px solid rgba(138, 43, 226, 0.4);
+  box-shadow: 0 8px 30px rgba(138, 43, 226, 0.3);
 }
 
 @keyframes bounceIn {
@@ -2242,10 +2353,11 @@ body {
   width: 80px;
   height: 80px;
   margin: 0 auto 20px;
-  border: 4px solid #667eea;
+  border: 4px solid #8b5cf6;
   border-radius: 50%;
   animation: ring 1s infinite;
   position: relative;
+  box-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
 }
 
 .incoming-animation::before {
@@ -2258,16 +2370,17 @@ body {
 }
 
 @keyframes ring {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
-  50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(138, 43, 226, 0.7); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(138, 43, 226, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(138, 43, 226, 0); }
 }
 
 .incoming-text {
   font-size: 20px;
-  color: #2d3748;
+  color: #ffffff;
   margin-bottom: 20px;
   font-weight: 600;
+  text-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
 }
 
 .answer-btn {
@@ -2423,12 +2536,14 @@ body {
 /* Bottom Control Bar */
 .bottom-bar {
   position: absolute;
-  bottom: 30px;
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
   z-index: 5;
+  max-width: 95vw;
+  width: auto;
 }
 
 .controls-group {
@@ -2441,11 +2556,17 @@ body {
   padding: 12px 20px;
   border-radius: 50px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  flex-wrap: nowrap;
+  overflow: visible;
+  width: auto;
+  min-width: fit-content;
 }
 
 .control-btn-modern {
   width: 52px;
   height: 52px;
+  min-width: 52px;
+  min-height: 52px;
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.15);
@@ -2461,6 +2582,7 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   position: relative;
+  flex-shrink: 0;
 }
 
 .control-btn-modern .icon {
@@ -2509,10 +2631,10 @@ body {
 /* Settings Panel */
 .settings-panel {
   position: absolute;
-  bottom: 0;
+  bottom: 10px;
   left: 0;
   right: 0;
-  background: linear-gradient(to bottom, #f2f2f7 0%, #e5e5ea 100%);
+  background: linear-gradient(to bottom, rgba(26, 26, 46, 0.98) 0%, rgba(15, 15, 15, 0.98) 100%);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
   border-radius: 20px 20px 0 0;
@@ -2520,16 +2642,18 @@ body {
   z-index: 20;
   max-height: 70vh;
   overflow: hidden;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8), 0 0 60px rgba(138, 43, 226, 0.2);
+  border-top: 1px solid rgba(138, 43, 226, 0.3);
 }
 
 .settings-handle {
   width: 40px;
   height: 5px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(138, 43, 226, 0.5);
   border-radius: 3px;
   margin: 12px auto 8px auto;
   cursor: grab;
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
 }
 
 .settings-header {
@@ -2537,10 +2661,10 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 20px 15px 20px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(26, 26, 46, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 0.5px solid rgba(138, 43, 226, 0.3);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -2548,17 +2672,18 @@ body {
 
 .settings-header h3 {
   font-size: 20px;
-  color: #000;
+  color: #ffffff;
   font-weight: 700;
   letter-spacing: -0.3px;
   margin: 0;
+  text-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
 }
 
 .close-btn {
-  background: rgba(118, 118, 128, 0.12);
-  border: none;
+  background: rgba(138, 43, 226, 0.2);
+  border: 1px solid rgba(138, 43, 226, 0.3);
   font-size: 20px;
-  color: #000;
+  color: #ffffff;
   cursor: pointer;
   width: 32px;
   height: 32px;
@@ -2572,7 +2697,8 @@ body {
 }
 
 .close-btn:hover {
-  background: rgba(118, 118, 128, 0.18);
+  background: rgba(138, 43, 226, 0.4);
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
 }
 
 .close-btn:active {
@@ -2587,29 +2713,34 @@ body {
   padding-bottom: 30px;
   overflow-y: auto;
   max-height: calc(70vh - 85px);
+  background: linear-gradient(to bottom, rgba(15, 15, 15, 0.5) 0%, rgba(26, 26, 46, 0.5) 100%);
 }
 
 .setting-item {
-  background: white;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(138, 43, 226, 0.2);
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   transition: all 0.2s;
 }
 
 .setting-item:active {
   transform: scale(0.99);
+  border-color: rgba(138, 43, 226, 0.4);
 }
 
 .setting-item label {
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #8e8e93;
+  color: #a78bfa;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 12px 16px 8px 16px;
-  background: white;
+  background: transparent;
 }
 
 .settings-select {
@@ -2617,15 +2748,15 @@ body {
   padding: 16px 16px;
   font-size: 17px;
   border: none;
-  background: white;
+  background: rgba(255, 255, 255, 0.05);
   cursor: pointer;
   transition: all 0.2s;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  color: #000;
+  color: #ffffff;
   font-weight: 400;
   -webkit-appearance: none;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%238E8E93' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23a78bfa' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 16px center;
   padding-right: 40px;
@@ -2633,21 +2764,22 @@ body {
 
 .settings-select:focus {
   outline: none;
-  background-color: #f9f9f9;
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
 }
 
 .settings-select:active {
-  background-color: #f2f2f7;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .settings-select option {
   padding: 12px;
-  background: white;
-  color: #000;
+  background: #1a1a2e;
+  color: #ffffff;
 }
 
 .camera-info {
-  background: white;
+  background: transparent;
   padding: 0;
   border-radius: 0;
   display: flex;
@@ -2657,12 +2789,12 @@ body {
 
 .info-text {
   font-size: 17px;
-  color: #000;
+  color: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 14px 16px;
-  border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 0.5px solid rgba(138, 43, 226, 0.2);
   margin: 0;
 }
 
@@ -2671,27 +2803,41 @@ body {
 }
 
 .info-text strong {
-  color: #8e8e93;
+  color: #a78bfa;
   font-weight: 400;
   font-size: 17px;
 }
 
 .quality-hint {
   margin: 8px 0 0 0;
-  padding: 0 16px;
+  padding: 0 16px 12px 16px;
   font-size: 13px;
-  color: #8e8e93;
+  color: #9ca3af;
   font-style: italic;
 }
 
-/* Slide Up Animation */
-.slide-up-enter-active, .slide-up-leave-active {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+/* Slide Up Animation for Bottom Bar */
+.slide-up-enter-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.slide-up-enter-from, .slide-up-leave-to {
-  transform: translateY(100%);
+.slide-up-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.slide-up-enter-from {
+  transform: translateX(-50%) translateY(150px);
   opacity: 0;
+}
+
+.slide-up-leave-to {
+  transform: translateX(-50%) translateY(150px);
+  opacity: 0;
+}
+
+.slide-up-enter-to {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
 }
 
 /* Custom scrollbar for settings */
@@ -2811,10 +2957,15 @@ body {
     gap: 12px;
     padding: 10px 16px;
     padding-bottom: 20px;
+    flex-wrap: nowrap;
+    overflow: visible;
+    max-width: calc(100vw - 30px);
   }
 
   .bottom-bar {
-    bottom: max(40px, env(safe-area-inset-bottom));
+    bottom: max(50px, env(safe-area-inset-bottom));
+    max-width: 100vw;
+    padding: 0 10px;
   }
 
   .settings-panel {
@@ -2948,6 +3099,9 @@ body {
   .control-btn-modern {
     width: 44px;
     height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
   }
 
   .control-btn-modern .icon {
@@ -2958,16 +3112,29 @@ body {
   .hang-up-red {
     width: 48px !important;
     height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
   }
 
   .controls-group {
     gap: 10px;
     padding: 8px 14px;
     padding-bottom: 18px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    max-width: calc(100vw - 20px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .controls-group::-webkit-scrollbar {
+    display: none;
   }
 
   .bottom-bar {
-    bottom: max(35px, env(safe-area-inset-bottom));
+    bottom: max(45px, env(safe-area-inset-bottom));
+    max-width: 100vw;
+    padding: 0 5px;
   }
 
   .call-duration {
@@ -3034,12 +3201,17 @@ body {
   }
 
   .bottom-bar {
-    bottom: max(25px, env(safe-area-inset-bottom));
+    bottom: max(35px, env(safe-area-inset-bottom));
+    max-width: 100vw;
+    padding: 0 5px;
   }
 
   .control-btn-modern {
     width: 44px;
     height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
   }
 
   .control-btn-modern .icon {
@@ -3050,11 +3222,22 @@ body {
   .hang-up-red {
     width: 48px !important;
     height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
   }
 
   .controls-group {
     padding: 8px 14px;
     padding-bottom: 16px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    max-width: calc(100vw - 20px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .controls-group::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -3070,9 +3253,9 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -3081,14 +3264,15 @@ body {
 }
 
 .camera-selector-panel {
-  background: linear-gradient(145deg, rgba(40, 40, 40, 0.98), rgba(30, 30, 30, 0.98));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(145deg, rgba(26, 26, 46, 0.98), rgba(15, 15, 15, 0.98));
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   border-radius: 24px 24px 0 0;
   padding: 24px;
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.8), 0 0 60px rgba(138, 43, 226, 0.3);
+  border-top: 1px solid rgba(138, 43, 226, 0.3);
   animation: slideUpIn 0.3s ease;
 }
 
@@ -3097,6 +3281,7 @@ body {
   margin: 0 0 20px 0;
   font-size: 20px;
   font-weight: 600;
+  text-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
 }
 
 .camera-list {
@@ -3113,8 +3298,8 @@ body {
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid transparent;
+  background: rgba(138, 43, 226, 0.1);
+  border: 2px solid rgba(138, 43, 226, 0.2);
   border-radius: 12px;
   color: white;
   font-size: 16px;
@@ -3127,23 +3312,27 @@ body {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
+  stroke: #a78bfa;
 }
 
 .camera-option:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(138, 43, 226, 0.2);
+  border-color: rgba(138, 43, 226, 0.4);
   transform: translateX(4px);
+  box-shadow: 0 4px 20px rgba(138, 43, 226, 0.3);
 }
 
 .camera-option.active {
-  background: rgba(34, 197, 94, 0.2);
-  border-color: rgba(34, 197, 94, 0.6);
+  background: rgba(138, 43, 226, 0.3);
+  border-color: rgba(138, 43, 226, 0.6);
+  box-shadow: 0 0 30px rgba(138, 43, 226, 0.4);
 }
 
 .close-camera-btn {
   width: 100%;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  background: rgba(138, 43, 226, 0.2);
+  border: 2px solid rgba(138, 43, 226, 0.3);
   border-radius: 12px;
   color: white;
   font-size: 16px;
@@ -3154,7 +3343,9 @@ body {
 }
 
 .close-camera-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(138, 43, 226, 0.3);
+  border-color: rgba(138, 43, 226, 0.5);
+  box-shadow: 0 4px 20px rgba(138, 43, 226, 0.3);
 }
 
 @keyframes slideUpIn {
