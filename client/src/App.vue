@@ -440,13 +440,11 @@ onMounted(async () => {
   // Detect device type and set quality accordingly
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   if (isMobile) {
-    selectedQuality.value = 'high'; // 720p for mobile - Clear AND battery efficient
-    selectedAudioQuality.value = 'music'; // Good audio quality
-    console.log('📱 Mobile detected: Using optimized 720p quality (clear video, good battery)');
+    selectedQuality.value = 'high';
+    selectedAudioQuality.value = 'music';
   } else {
-    selectedQuality.value = 'hd'; // 1080p for desktop
+    selectedQuality.value = 'hd';
     selectedAudioQuality.value = 'studio';
-    console.log('💻 Desktop detected: Using HD quality (1080p)');
   }
   
   // Get available cameras
@@ -474,10 +472,9 @@ onMounted(async () => {
     const currentStream = await navigator.mediaDevices.getUserMedia(constraints);
     stream.value = currentStream;
     if (myVideo.value) myVideo.value.srcObject = currentStream;
-    cameraEnabled.value = true; // Mark camera as enabled
+    cameraEnabled.value = true;
     videoEnabled.value = true;
   } catch (err) {
-    console.error("Media access error:", err);
     alert("Please allow camera and microphone access!");
   }
 
@@ -508,8 +505,6 @@ const generateSecureRoomName = () => {
   // Format with dashes for readability
   const formatted = roomName.match(/.{1,4}/g).join('-');
   roomId.value = formatted;
-  
-  console.log('✅ Generated secure room name:', formatted);
 };
 
 // Security: Validate room name before joining
@@ -543,9 +538,6 @@ const joinRoom = async () => {
     // Phase 2: Check if room requires password or create with password
     const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
     
-    console.log('🔍 Connecting to server:', serverUrl);
-    console.log('🔍 Room ID:', roomId.value);
-    
     // Show connecting message
     alert('Connecting to server... This may take 30-60 seconds if server is sleeping.');
     
@@ -558,17 +550,13 @@ const joinRoom = async () => {
       }
     });
     
-    console.log('📡 Room info response status:', roomInfoResponse.status);
-    
     if (!roomInfoResponse.ok) {
       const errorText = await roomInfoResponse.text();
-      console.error('❌ Room info error:', errorText);
       alert(`Server error: ${roomInfoResponse.status} - ${errorText}`);
       return;
     }
     
     const roomInfo = await roomInfoResponse.json();
-    console.log('✅ Room info:', roomInfo);
     
     if (roomInfo.isFull) {
       alert("Room is full! Only 2 people allowed.");
@@ -589,7 +577,6 @@ const joinRoom = async () => {
       password: roomPassword.value || undefined
     };
     
-    console.log('📤 Sending token request to:', `${serverUrl}${endpoint}`);
     
     const response = await fetch(`${serverUrl}${endpoint}`, {
       method: 'POST',
@@ -600,23 +587,19 @@ const joinRoom = async () => {
       body: JSON.stringify(body)
     });
     
-    console.log('📡 Token response status:', response.status);
     
     if (!response.ok) {
       const error = await response.json();
-      console.error('❌ Token error:', error);
-      alert(error.error || 'Failed to join room');
+        alert(error.error || 'Failed to join room');
       return;
     }
     
     const data = await response.json();
-    console.log('✅ Got token:', data.token ? 'yes' : 'no');
     authToken.value = data.token;
     
     // Initialize E2E encryption
     e2eEncryption.value = new E2EEncryption(roomId.value, roomPassword.value);
     
-    console.log('🔌 Connecting socket to:', serverUrl);
     
     // Reconnect socket with new token
     if (socket.value) {
@@ -637,11 +620,8 @@ const joinRoom = async () => {
     // Join the room
     socket.value.emit('joinRoom', roomId.value);
     
-    console.log('✅ Joined room with authentication');
     
   } catch (error) {
-    console.error('❌ Error joining room:', error);
-    console.error('❌ Error details:', error.message, error.stack);
     joinError.value = `Failed: ${error.message}`;
     alert(`Failed to join room: ${error.message}. Check console for details.`);
   } finally {
@@ -654,7 +634,6 @@ const setupSocketListeners = () => {
   socket.value.on('me', (id) => myId.value = id);
   
   socket.value.on('userJoined', (id) => {
-    console.log("Friend joined! Auto-starting call...");
     userJoined.value = true;
     callerId.value = id;
     
@@ -688,20 +667,17 @@ const setupSocketListeners = () => {
         callerId.value = data.from;
         
         // Auto-answer call immediately
-        console.log("Incoming call detected! Auto-answering...");
-        setTimeout(() => {
+            setTimeout(() => {
           if (!callAccepted.value) {
             answerCall();
           }
         }, 100);
       } else if (connectionRef.value && signal.candidate) {
         // Handle trickled ICE candidates
-        console.log('📡 Received trickled ICE candidate');
-        connectionRef.value.signal(signal);
+            connectionRef.value.signal(signal);
       }
     } catch (error) {
-      console.error('❌ Failed to decrypt signal:', error);
-      alert('Failed to establish secure connection');
+        alert('Failed to establish secure connection');
     }
   });
   
@@ -754,10 +730,8 @@ const joinWithPassword = async () => {
     socket.value.emit('joinRoom', roomId.value);
     
     showPasswordModal.value = false;
-    console.log('✅ Joined password-protected room');
     
   } catch (error) {
-    console.error('❌ Error joining with password:', error);
     alert('Failed to join room');
   }
 };
@@ -773,7 +747,6 @@ const callUser = () => {
   
   // Ensure we have media stream with ACTIVE tracks
   if (!stream.value) {
-    console.error('❌ No media stream available!');
     alert('No camera/microphone access. Please restart the app and grant permissions.');
     isCalling.value = false;
     return;
@@ -786,7 +759,6 @@ const callUser = () => {
   console.log('📹 Active tracks:', activeTracks.length);
   
   if (activeTracks.length === 0) {
-    console.error('❌ No active tracks in stream!');
     alert('Camera/Microphone not active. Please enable camera and try again.');
     isCalling.value = false;
     return;
@@ -794,7 +766,6 @@ const callUser = () => {
   
   // Log each track
   tracks.forEach(track => {
-    console.log(`📹 Track: ${track.kind} - ${track.label} - State: ${track.readyState}`);
   });
   
   // Create peer with current stream (may or may not have video)
@@ -858,13 +829,11 @@ const callUser = () => {
   });
 
   peer.on('stream', (userStream) => {
-    console.log('🎥 Received remote stream:', userStream);
     console.log('🎥 Remote stream tracks:', userStream.getTracks());
     
     // Log each track
     userStream.getTracks().forEach(track => {
-      console.log(`🎥 Remote track: ${track.kind} - ${track.label} - State: ${track.readyState} - Enabled: ${track.enabled}`);
-    });
+      });
     
     userVideo.value.srcObject = userStream;
     // Ensure video plays
@@ -872,8 +841,7 @@ const callUser = () => {
     
     // Listen for track changes (when remote peer adds/removes tracks)
     userStream.onaddtrack = (event) => {
-      console.log('🎥 Remote track added:', event.track.kind);
-      // Refresh video element
+        // Refresh video element
       if (userVideo.value) {
         userVideo.value.srcObject = userStream;
         userVideo.value.play().catch(err => console.log('Play error:', err));
@@ -881,76 +849,52 @@ const callUser = () => {
     };
     
     userStream.onremovetrack = (event) => {
-      console.log('🎥 Remote track removed:', event.track.kind);
-    };
+      };
   });
   
   // Apply bitrate constraints after connection
   peer.on('connect', () => {
-    console.log('✅ Peer connected successfully');
     applyBitrateConstraints(peer);
   });
   
   // Monitor ICE connection state changes
   if (peer._pc) {
     peer._pc.oniceconnectionstatechange = () => {
-      console.log('🧊 ICE Connection State:', peer._pc.iceConnectionState);
-      console.log('🔗 Connection State:', peer._pc.connectionState);
-      
+          
       // If connection is failing, log why
       if (peer._pc.iceConnectionState === 'failed' || peer._pc.connectionState === 'failed') {
-        console.error('❌ Connection failed. Checking ICE candidates...');
-        peer._pc.getStats().then(stats => {
+            peer._pc.getStats().then(stats => {
           stats.forEach(report => {
             if (report.type === 'candidate-pair' && report.state === 'succeeded') {
-              console.log('✅ Working candidate pair:', report);
-            }
+                      }
           });
         });
       }
     };
     
     peer._pc.onicegatheringstatechange = () => {
-      console.log('📡 ICE Gathering State:', peer._pc.iceGatheringState);
-    };
+      };
     
     peer._pc.onconnectionstatechange = () => {
-      console.log('🔌 Connection State Changed:', peer._pc.connectionState);
-    };
+      };
   }
   
   // Handle errors
   peer.on('error', (err) => {
-    console.error('❌ Peer connection error:', err);
-    console.error('Error details:', {
-      message: err.message,
-      stack: err.stack
-    });
     
     // Log connection states for debugging
     if (peer._pc) {
-      console.log('Current states:', {
-        iceConnectionState: peer._pc.iceConnectionState,
-        connectionState: peer._pc.connectionState,
-        signalingState: peer._pc.signalingState
-      });
-    }
+      }
     
     // Don't alert on normal errors like renegotiation
     if (err.message && !err.message.includes('negotiation')) {
-      console.warn('Non-critical peer error:', err.message);
-    }
+      }
   });
   
   // Handle connection close
   peer.on('close', () => {
-    console.log('🔌 Peer connection closed');
     if (peer._pc) {
-      console.log('Final states:', {
-        iceConnectionState: peer._pc.iceConnectionState,
-        connectionState: peer._pc.connectionState
-      });
-    }
+      }
   });
 
   socket.value.on('callAccepted', (signal) => {
@@ -968,12 +912,10 @@ const callUser = () => {
         resetControlsTimer();
       } else if (decryptedSignal.candidate && connectionRef.value) {
         // Handle trickled ICE candidates
-        console.log('📡 Received trickled ICE candidate');
-        connectionRef.value.signal(decryptedSignal);
+            connectionRef.value.signal(decryptedSignal);
       }
     } catch (error) {
-      console.error('❌ Failed to decrypt signal:', error);
-      alert('Failed to establish secure connection');
+        alert('Failed to establish secure connection');
     }
   });
 
@@ -990,7 +932,6 @@ const answerCall = () => {
   
   // Ensure we have media stream with ACTIVE tracks
   if (!stream.value) {
-    console.error('❌ No media stream available when answering!');
     alert('No camera/microphone access. Please restart the app.');
     return;
   }
@@ -1002,14 +943,12 @@ const answerCall = () => {
   console.log('📹 Active tracks:', activeTracks.length);
   
   if (activeTracks.length === 0) {
-    console.error('❌ No active tracks when answering!');
     alert('Camera/Microphone not active. Please enable camera.');
     return;
   }
   
   // Log each track
   tracks.forEach(track => {
-    console.log(`📹 Track: ${track.kind} - ${track.label} - State: ${track.readyState}`);
   });
   
   // Create peer with current stream (may or may not have video)
@@ -1069,13 +1008,11 @@ const answerCall = () => {
   });
 
   peer.on('stream', (userStream) => {
-    console.log('🎥 Received remote stream:', userStream);
     console.log('🎥 Remote stream tracks:', userStream.getTracks());
     
     // Log each track
     userStream.getTracks().forEach(track => {
-      console.log(`🎥 Remote track: ${track.kind} - ${track.label} - State: ${track.readyState} - Enabled: ${track.enabled}`);
-    });
+      });
     
     userVideo.value.srcObject = userStream;
     // Ensure video plays
@@ -1083,8 +1020,7 @@ const answerCall = () => {
     
     // Listen for track changes (when remote peer adds/removes tracks)
     userStream.onaddtrack = (event) => {
-      console.log('🎥 Remote track added:', event.track.kind);
-      // Refresh video element
+        // Refresh video element
       if (userVideo.value) {
         userVideo.value.srcObject = userStream;
         userVideo.value.play().catch(err => console.log('Play error:', err));
@@ -1092,76 +1028,52 @@ const answerCall = () => {
     };
     
     userStream.onremovetrack = (event) => {
-      console.log('🎥 Remote track removed:', event.track.kind);
-    };
+      };
   });
   
   // Apply bitrate constraints after connection
   peer.on('connect', () => {
-    console.log('✅ Peer connected successfully');
     applyBitrateConstraints(peer);
   });
   
   // Monitor ICE connection state changes
   if (peer._pc) {
     peer._pc.oniceconnectionstatechange = () => {
-      console.log('🧊 ICE Connection State:', peer._pc.iceConnectionState);
-      console.log('🔗 Connection State:', peer._pc.connectionState);
-      
+          
       // If connection is failing, log why
       if (peer._pc.iceConnectionState === 'failed' || peer._pc.connectionState === 'failed') {
-        console.error('❌ Connection failed. Checking ICE candidates...');
-        peer._pc.getStats().then(stats => {
+            peer._pc.getStats().then(stats => {
           stats.forEach(report => {
             if (report.type === 'candidate-pair' && report.state === 'succeeded') {
-              console.log('✅ Working candidate pair:', report);
-            }
+                      }
           });
         });
       }
     };
     
     peer._pc.onicegatheringstatechange = () => {
-      console.log('📡 ICE Gathering State:', peer._pc.iceGatheringState);
-    };
+      };
     
     peer._pc.onconnectionstatechange = () => {
-      console.log('🔌 Connection State Changed:', peer._pc.connectionState);
-    };
+      };
   }
   
   // Handle errors
   peer.on('error', (err) => {
-    console.error('❌ Peer connection error:', err);
-    console.error('Error details:', {
-      message: err.message,
-      stack: err.stack
-    });
     
     // Log connection states for debugging
     if (peer._pc) {
-      console.log('Current states:', {
-        iceConnectionState: peer._pc.iceConnectionState,
-        connectionState: peer._pc.connectionState,
-        signalingState: peer._pc.signalingState
-      });
-    }
+      }
     
     // Don't alert on normal errors like renegotiation
     if (err.message && !err.message.includes('negotiation')) {
-      console.warn('Non-critical peer error:', err.message);
-    }
+      }
   });
   
   // Handle connection close
   peer.on('close', () => {
-    console.log('🔌 Peer connection closed');
     if (peer._pc) {
-      console.log('Final states:', {
-        iceConnectionState: peer._pc.iceConnectionState,
-        connectionState: peer._pc.connectionState
-      });
-    }
+      }
   });
 
   peer.signal(callerSignal.value);
@@ -1225,8 +1137,7 @@ const toggleCameraLobby = async () => {
       cameraEnabled.value = true;
       videoEnabled.value = true;
     } catch (err) {
-      console.error('Failed to turn on camera:', err);
-      alert('Could not access camera. Please check permissions.');
+        alert('Could not access camera. Please check permissions.');
     }
   }
 };
@@ -1283,23 +1194,19 @@ const toggleCamera = async () => {
         if (videoSender) {
           // Replace existing video track
           await videoSender.replaceTrack(newVideoTrack);
-          console.log('✅ Video track replaced in peer connection');
-        } else {
+              } else {
           // Add new video track if no sender exists (camera was OFF at start)
           connectionRef.value._pc.addTrack(newVideoTrack, stream.value);
-          console.log('✅ Video track added to peer connection');
-          
+                
           // Simple-peer will automatically renegotiate when track is added
           // The 'negotiationneeded' event is handled internally by simple-peer
-          console.log('🔄 Renegotiation will happen automatically...');
-        }
+              }
       }
       
       cameraEnabled.value = true;
       videoEnabled.value = true;
     } catch (err) {
-      console.error('Failed to turn on camera:', err);
-      alert('Could not access camera. Please check permissions.');
+        alert('Could not access camera. Please check permissions.');
     }
   }
 };
@@ -1382,11 +1289,9 @@ const switchCamera = async () => {
       const sender = connectionRef.value._pc.getSenders().find(s => s.track?.kind === 'video');
       if (sender) {
         await sender.replaceTrack(newVideoTrack);
-        console.log(`✅ Camera switched to ${facingMode.value === 'user' ? 'front' : 'rear'}: ${targetCamera?.label}`);
-      }
+          }
     }
   } catch (err) {
-    console.error('Failed to switch camera:', err);
     alert('Could not switch camera. Your device may not have multiple cameras.');
     // Revert facing mode if failed
     facingMode.value = currentFacing;
@@ -1443,13 +1348,11 @@ const selectSpecificCamera = async (deviceId) => {
       const sender = connectionRef.value._pc.getSenders().find(s => s.track?.kind === 'video');
       if (sender) {
         await sender.replaceTrack(newVideoTrack);
-        console.log(`✅ Camera changed to: ${camera?.label}`);
-      }
+          }
     }
     
     showCameraSelector.value = false;
   } catch (err) {
-    console.error('Failed to select camera:', err);
     alert('Could not switch to selected camera.');
   }
 };
@@ -1482,9 +1385,7 @@ const enumerateCameras = async () => {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     availableCameras.value = devices.filter(device => device.kind === 'videoinput');
-    console.log(`Found ${availableCameras.value.length} cameras`);
   } catch (err) {
-    console.error('Failed to enumerate cameras:', err);
   }
 };
 
@@ -1493,8 +1394,7 @@ watch(() => userVideo.value?.srcObject, async (newSrcObject) => {
   if (newSrcObject && userVideo.value) {
     await nextTick();
     userVideo.value.play().catch(err => {
-      console.log('Video autoplay prevented:', err);
-      // Try again after a short delay
+        // Try again after a short delay
       setTimeout(() => {
         userVideo.value?.play().catch(e => console.log('Retry failed:', e));
       }, 100);
@@ -1557,7 +1457,6 @@ const applyBitrateConstraints = async (peer) => {
     const quality = qualityPresets[selectedQuality.value];
     const targetBitrate = quality.bitrate;
     
-    console.log(`🎯 Setting ${selectedQuality.value} quality: ${quality.width}x${quality.height}@${quality.frameRate}fps`);
     console.log(`📊 Target bitrate: ${(targetBitrate / 1000000).toFixed(1)} Mbps`);
     
     const sender = peer._pc.getSenders().find(s => s.track?.kind === 'video');
@@ -1587,7 +1486,6 @@ const applyBitrateConstraints = async (peer) => {
       console.log(`🎬 Hardware acceleration active (GPU encoding for battery efficiency)`);
     }
   } catch (err) {
-    console.error('❌ Failed to set bitrate constraints:', err);
   }
 };
 
@@ -1630,10 +1528,8 @@ const toggleScreenShare = async () => {
         stopScreenShare();
       };
 
-      console.log('✅ Screen sharing started');
-    } catch (err) {
-      console.error('Failed to share screen:', err);
-      alert('Could not share screen. Please try again.');
+      } catch (err) {
+        alert('Could not share screen. Please try again.');
     }
   } else {
     // Stop screen sharing
@@ -1774,9 +1670,7 @@ const changeVideoQuality = async () => {
       }
     }
     
-    console.log(`Video quality changed to ${selectedQuality.value}: ${quality.width}x${quality.height}@${quality.frameRate}fps`);
   } catch (err) {
-    console.error('Failed to change video quality:', err);
     alert('Could not change video quality. Try again.');
   }
 };
@@ -1830,7 +1724,6 @@ const changeAudioQuality = async () => {
     
     console.log(`Audio quality changed to ${selectedAudioQuality.value}: ${audioQuality.sampleRate}Hz, ${audioQuality.channelCount} channel(s)`);
   } catch (err) {
-    console.error('Failed to change audio quality:', err);
     alert('Could not change audio quality. Try again.');
   }
 };
