@@ -140,19 +140,26 @@
       ref="userVideo"
       autoplay
       playsinline
-      class="main-video"
+      :class="['main-video', isVideoSwapped && 'swapped']"
+      @dblclick="swapVideos"
     ></video>
 
     <!-- Small Self Video (Picture-in-Picture) -->
-    <div class="pip-video-container">
+    <div 
+      class="pip-video-container" 
+      :style="pipStyle"
+      @dblclick="swapVideos"
+      @mousedown="startDrag"
+      @touchstart="startDragTouch"
+    >
       <video
         ref="myVideo"
         muted
         autoplay
         playsinline
-        class="pip-video"
+        :class="['pip-video', isVideoSwapped && 'swapped']"
       ></video>
-      <span class="pip-label">You</span>
+      <span class="pip-label">{{ isVideoSwapped ? 'Friend' : 'You' }}</span>
     </div>
 
     <!-- Top Bar (Info) - Auto-hide -->
@@ -351,7 +358,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, watch, nextTick } from 'vue';
+import { ref, onMounted, reactive, watch, nextTick, computed } from 'vue';
 import io from 'socket.io-client';
 import SimplePeer from 'simple-peer';
 import { E2EEncryption } from './encryption.js';
@@ -422,6 +429,15 @@ const screenStream = ref(null);
 // Copy room name functionality
 const copySuccess = ref(false);
 
+// Video swap functionality
+const isVideoSwapped = ref(false);
+
+// PiP video dragging functionality
+const pipPosition = ref({ x: 20, y: 80 }); // Default position (right: 20px, top: 80px)
+const isDragging = ref(false);
+const dragStart = ref({ x: 0, y: 0 });
+const dragOffset = ref({ x: 0, y: 0 });
+
 // Quality presets with bitrate - Optimized for BOTH quality AND battery
 const qualityPresets = {
   low: { width: 640, height: 360, frameRate: 15, bitrate: 300000 }, // 300 Kbps
@@ -463,9 +479,13 @@ onMounted(async () => {
   if (isMobile) {
     selectedQuality.value = 'high';
     selectedAudioQuality.value = 'music';
+    // Set initial PiP position for mobile
+    pipPosition.value = { x: 15, y: 70 };
   } else {
     selectedQuality.value = 'hd';
     selectedAudioQuality.value = 'studio';
+    // Set initial PiP position for desktop
+    pipPosition.value = { x: 20, y: 80 };
   }
 
   // Get available cameras
@@ -1817,6 +1837,173 @@ const toggleFullscreen = () => {
   }
 };
 
+// Swap videos (WhatsApp-like feature)
+const swapVideos = () => {
+  isVideoSwapped.value = !isVideoSwapped.value;
+  
+  if (isVideoSwapped.value) {
+    // Swap: Show my video on main, friend's on PiP
+    if (myVideo.value && userVideo.value) {
+      const myStream = myVideo.value.srcObject;
+      const userStream = userVideo.value.srcObject;
+      
+      userVideo.value.srcObject = myStream;
+      myVideo.value.srcObject = userStream;
+      
+      // Unmute the previously muted video when swapped
+      if (userVideo.value.srcObject) {
+        userVideo.value.muted = true; // My video should stay muted
+      }
+      if (myVideo.value.srcObject) {
+        myVideo.value.muted = false; // Friend's video should be audible
+      }
+    }
+  } else {
+    // Restore: Friend on main, my video on PiP
+    if (myVideo.value && userVideo.value) {
+      const myStream = myVideo.value.srcObject;
+      const userStream = userVideo.value.srcObject;
+      
+      userVideo.value.srcObject = userStream;
+      myVideo.value.srcObject = myStream;
+      
+      // Restore original mute states
+      if (myVideo.value.srcObject) {
+        myVideo.value.muted = true; // My video should be muted
+      }
+      if (userVideo.value.srcObject) {
+        userVideo.value.muted = false; // Friend's video should be audible
+      }
+    }
+  }
+};
+
+// Computed style for PiP positioning
+const pipStyle = computed(() => ({
+  right: `${pipPosition.value.x}px`,
+  top: `${pipPosition.value.y}px`,
+  cursor: isDragging.value ? 'grabbing' : 'grab'
+}));
+
+// Start drag with mouse
+const startDrag = (e) => {
+  if (e.target.tagName === 'VIDEO') return; // Don't drag if clicking video directly
+  
+  isDragging.value = true;
+  dragStart.value = {
+    x: e.clientX,
+    y: e.clientY
+  };
+  dragOffset.value = {
+    x: pipPosition.value.x,
+    y: pipPosition.value.y
+  };
+  
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', stopDrag);
+  e.preventDefault();
+};
+
+// Start drag with touch
+const startDragTouch = (e) => {
+  if (e.touches.length !== 1) return;
+  
+  const touch = e.touches[0];
+  isDragging.value = true;
+  dragStart.value = {
+    x: touch.clientX,
+    y: touch.clientY
+  };
+  dragOffset.value = {
+    x: pipPosition.value.x,
+    y: pipPosition.value.y
+  };
+  
+  document.addEventListener('touchmove', onDragTouch, { passive: false });
+  document.addEventListener('touchend', stopDragTouch);
+  e.preventDefault();
+};
+
+// Handle drag movement
+const onDrag = (e) => {
+  if (!isDragging.value) return;
+  
+  const deltaX = dragStart.value.x - e.clientX;
+  const deltaY = e.clientY - dragStart.value.y;
+  
+  const newX = dragOffset.value.x + deltaX;
+  const newY = dragOffset.value.y + deltaY;
+  
+  // Get screen dimensions
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+  
+  // PiP dimensions (adjust based on screen size)
+  const pipWidth = 120;
+  const pipHeight = 160;
+  
+  // Constrain to screen boundaries
+  const minX = 10;
+  const maxX = screenWidth - pipWidth - 10;
+  const minY = 60; // Below top bar
+  const maxY = screenHeight - pipHeight - 100; // Above bottom controls
+  
+  pipPosition.value = {
+    x: Math.max(minX, Math.min(maxX, screenWidth - newX - pipWidth)),
+    y: Math.max(minY, Math.min(maxY, newY))
+  };
+  
+  e.preventDefault();
+};
+
+// Handle touch drag movement
+const onDragTouch = (e) => {
+  if (!isDragging.value || e.touches.length !== 1) return;
+  
+  const touch = e.touches[0];
+  const deltaX = dragStart.value.x - touch.clientX;
+  const deltaY = touch.clientY - dragStart.value.y;
+  
+  const newX = dragOffset.value.x + deltaX;
+  const newY = dragOffset.value.y + deltaY;
+  
+  // Get screen dimensions
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+  
+  // PiP dimensions (adjust based on screen size)
+  const isMobile = screenWidth < 768;
+  const pipWidth = isMobile ? 85 : 120;
+  const pipHeight = isMobile ? 115 : 160;
+  
+  // Constrain to screen boundaries
+  const minX = 10;
+  const maxX = screenWidth - pipWidth - 10;
+  const minY = 60; // Below top bar
+  const maxY = screenHeight - pipHeight - 100; // Above bottom controls
+  
+  pipPosition.value = {
+    x: Math.max(minX, Math.min(maxX, screenWidth - newX - pipWidth)),
+    y: Math.max(minY, Math.min(maxY, newY))
+  };
+  
+  e.preventDefault();
+};
+
+// Stop drag
+const stopDrag = () => {
+  isDragging.value = false;
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup', stopDrag);
+};
+
+// Stop touch drag
+const stopDragTouch = () => {
+  isDragging.value = false;
+  document.removeEventListener('touchmove', onDragTouch);
+  document.removeEventListener('touchend', stopDragTouch);
+};
+
 </script>
 
 <style>
@@ -2424,12 +2611,15 @@ body {
   position: absolute;
   top: 0;
   left: 0;
+  transition: all 0.3s ease;
+}
+
+.main-video.swapped {
+  transform: scaleX(-1);
 }
 
 .pip-video-container {
   position: absolute;
-  top: 80px;
-  right: 20px;
   width: 120px;
   height: 160px;
   border-radius: 16px;
@@ -2437,12 +2627,22 @@ body {
   box-shadow: 0 10px 30px rgba(0,0,0,0.7);
   z-index: 10;
   border: 3px solid rgba(255,255,255,0.3);
-  transition: all 0.3s;
+  transition: transform 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   background: #1a1a1a;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
 }
 
 .pip-video-container:active {
-  transform: scale(0.95);
+  cursor: grabbing;
+}
+
+.pip-video-container:hover {
+  transform: scale(1.05);
+  border-color: rgba(138, 43, 226, 0.6);
+  box-shadow: 0 10px 40px rgba(138, 43, 226, 0.5);
 }
 
 .pip-video {
@@ -2450,6 +2650,11 @@ body {
   height: 100%;
   object-fit: cover;
   transform: scaleX(-1);
+  transition: all 0.3s ease;
+}
+
+.pip-video.swapped {
+  transform: scaleX(1);
 }
 
 .pip-label {
@@ -2463,6 +2668,13 @@ body {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.5px;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.pip-video-container:hover .pip-label {
+  background: rgba(138, 43, 226, 0.9);
+  box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
 }
 
 /* Top Bar */
@@ -2930,10 +3142,8 @@ body {
   }
 
   .pip-video-container {
-    width: 100px;
-    height: 140px;
-    top: 70px;
-    right: 15px;
+    width: 85px;
+    height: 115px;
     border-width: 2px;
     border-radius: 12px;
   }
@@ -3090,10 +3300,8 @@ body {
   }
 
   .pip-video-container {
-    width: 90px;
-    height: 120px;
-    top: 60px;
-    right: 12px;
+    width: 75px;
+    height: 100px;
   }
 
   .control-btn-modern {
@@ -3194,10 +3402,8 @@ body {
   }
 
   .pip-video-container {
-    width: 80px;
-    height: 100px;
-    top: 15px;
-    right: 15px;
+    width: 70px;
+    height: 90px;
   }
 
   .bottom-bar {
