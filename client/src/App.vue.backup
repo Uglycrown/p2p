@@ -135,28 +135,17 @@
     @mousemove="handleScreenTap"
     @touchstart="handleScreenTap"
   >
-    <!-- Main Video (Friend's video - Large, or Your video in Android PiP) -->
+    <!-- Main Video (Friend's video - Large) -->
     <video
       ref="userVideo"
       autoplay
       playsinline
-      :class="['main-video', isVideoSwapped && 'swapped', isInAndroidPipMode && 'pip-mode']"
+      :class="['main-video', isVideoSwapped && 'swapped']"
       @dblclick="swapVideos"
-    ></video>
-    
-    <!-- Hidden video for Android PiP - shows YOUR video -->
-    <video
-      v-if="isInAndroidPipMode"
-      ref="pipModeVideo"
-      autoplay
-      playsinline
-      muted
-      style="position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"
     ></video>
 
     <!-- Small Self Video (Picture-in-Picture) -->
     <div 
-      v-show="!isInAndroidPipMode"
       class="pip-video-container" 
       :style="pipStyle"
       @dblclick="swapVideos"
@@ -171,20 +160,6 @@
         :class="['pip-video', isVideoSwapped && 'swapped']"
       ></video>
       <span class="pip-label">{{ isVideoSwapped ? 'Friend' : 'You' }}</span>
-      
-      <!-- Camera Rotate Button (Only on "You" video) -->
-      <button
-        v-if="!isVideoSwapped && cameraEnabled"
-        @click.stop="switchCamera"
-        class="pip-camera-rotate-btn"
-        title="Switch Camera"
-      >
-        <svg class="icon-rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 4v6h-6"/>
-          <path d="M1 20v-6h6"/>
-          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-        </svg>
-      </button>
     </div>
 
     <!-- Top Bar (Info) - Auto-hide -->
@@ -209,72 +184,91 @@
       </div>
     </transition>
 
-    <!-- Bottom Control Bar - Auto-hide (WhatsApp Style) -->
+    <!-- Bottom Control Bar - Auto-hide -->
     <transition name="slide-up">
       <div v-show="showControls" class="bottom-bar">
-        <div class="controls-group-whatsapp">
-          <!-- Three Dots Menu (More Options) -->
-          <button
-            @click.stop="showMoreOptions = !showMoreOptions"
-            class="control-btn-whatsapp"
-            title="More Options"
-          >
-            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="5" cy="12" r="2"/>
-              <circle cx="12" cy="12" r="2"/>
-              <circle cx="19" cy="12" r="2"/>
-            </svg>
-          </button>
-
+        <div class="controls-group">
           <!-- Camera Toggle -->
           <button
             @click.stop="toggleCamera"
-            :class="['control-btn-whatsapp', !cameraEnabled && 'btn-disabled']"
+            :class="['control-btn-modern', !cameraEnabled && 'btn-disabled']"
             :title="cameraEnabled ? 'Turn Camera Off' : 'Turn Camera On'"
           >
-            <svg v-if="cameraEnabled" class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+            <svg v-if="cameraEnabled" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 7l-7 5 7 5V7z"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
             </svg>
-            <svg v-else class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M21 6.5l-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z"/>
+            <svg v-else class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="1" y1="1" x2="23" y2="23"/>
+              <path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3 0h6l2-3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56"/>
             </svg>
           </button>
 
-          <!-- Speaker/Audio Output Toggle -->
+          <!-- Screen Share Toggle -->
           <button
-            @click.stop="showAudioOutputMenu = !showAudioOutputMenu"
-            :class="['control-btn-whatsapp', selectedAudioOutput !== 'earpiece' && 'btn-active']"
-            title="Audio Output"
+            @click.stop="toggleScreenShare"
+            :class="['control-btn-modern', isScreenSharing && 'btn-active']"
+            title="Share Screen"
           >
-            <svg v-if="selectedAudioOutput === 'speaker'" class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-            </svg>
-            <svg v-else-if="selectedAudioOutput === 'bluetooth'" class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
-            </svg>
-            <svg v-else class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 9v6h4l5 5V4L7 9H3z"/>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+              <polyline v-if="isScreenSharing" points="10 8 12 10 15 7" stroke-width="3"/>
             </svg>
           </button>
 
-          <!-- Audio Toggle (Microphone) -->
+          <!-- Switch Camera (Front/Rear) -->
+          <button
+            v-if="availableCameras.length > 1 && cameraEnabled"
+            @click.stop="switchCamera"
+            class="control-btn-modern"
+            :title="facingMode === 'user' ? 'Switch to Rear Camera' : 'Switch to Front Camera'"
+          >
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 10l5 5-5 5"/>
+              <path d="M22 15H11a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4h11"/>
+            </svg>
+          </button>
+
+          <!-- Camera Selector (Multi-camera devices) -->
+          <button
+            v-if="availableCameras.length > 2 && cameraEnabled"
+            @click.stop="showCameraSelector = !showCameraSelector"
+            class="control-btn-modern"
+            title="Select Camera"
+          >
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M1 12h6m6 0h6"/>
+            </svg>
+          </button>
+
+          <!-- Audio Toggle -->
           <button
             @click.stop="toggleAudio"
-            :class="['control-btn-whatsapp', !audioEnabled && 'btn-disabled']"
+            :class="['control-btn-modern', !audioEnabled && 'btn-disabled']"
             :title="audioEnabled ? 'Mute' : 'Unmute'"
           >
-            <svg v-if="audioEnabled" class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+            <svg v-if="audioEnabled" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
             </svg>
-            <svg v-else class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/>
+            <svg v-else class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="1" y1="1" x2="23" y2="23"/>
+              <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/>
+              <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
             </svg>
           </button>
 
-          <!-- Hang Up Button (Red Phone) -->
+          <!-- Hang Up Button -->
           <button
             @click.stop="leaveCall"
-            class="control-btn-whatsapp hang-up-red"
+            class="control-btn-modern hang-up-red"
             title="End Call"
           >
             <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
@@ -285,141 +279,26 @@
       </div>
     </transition>
 
-    <!-- More Options Menu (Three Dots Popup) -->
-    <transition name="slide-up">
-      <div v-if="showMoreOptions" class="more-options-menu">
-        <div class="options-container">
-          <h3>More Options</h3>
-          
-          <!-- Camera Selector -->
-          <div v-if="availableCameras.length > 1 && cameraEnabled" class="option-section">
-            <h4>📷 Select Camera</h4>
-            <div class="camera-options-list">
-              <button
-                v-for="camera in availableCameras"
-                :key="camera.deviceId"
-                @click="selectSpecificCamera(camera.deviceId)"
-                :class="['option-item', selectedCameraId === camera.deviceId && 'active']"
-              >
-                <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M12 1v6m0 6v6M1 12h6m6 0h6"/>
-                </svg>
-                <span>{{ getCameraLabel(camera) }}</span>
-                <svg v-if="selectedCameraId === camera.deviceId" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Screen Share -->
-          <div class="option-section">
-            <h4>📱 Screen Sharing</h4>
+    <!-- Camera Selector Popup -->
+    <transition name="fade">
+      <div v-if="showCameraSelector" class="camera-selector-overlay" @click.self="showCameraSelector = false">
+        <div class="camera-selector-panel">
+          <h3>Select Camera</h3>
+          <div class="camera-list">
             <button
-              @click="toggleScreenShare"
-              :class="['option-item', 'screen-share-option', isScreenSharing && 'active']"
+              v-for="camera in availableCameras"
+              :key="camera.deviceId"
+              @click="selectSpecificCamera(camera.deviceId)"
+              :class="['camera-option', selectedCameraId === camera.deviceId && 'active']"
             >
-              <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                <line x1="8" y1="21" x2="16" y2="21"/>
-                <line x1="12" y1="17" x2="12" y2="21"/>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 7l-7 5 7 5V7z"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
               </svg>
-              <span>{{ isScreenSharing ? 'Stop Screen Share' : 'Share Your Screen' }}</span>
-              <svg v-if="isScreenSharing" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </button>
-            <p class="option-hint">Share what you're doing on your phone</p>
-          </div>
-
-          <button @click="showMoreOptions = false" class="close-options-btn">Close</button>
-        </div>
-      </div>
-    </transition>
-
-    <!-- Audio Output Selector Menu -->
-    <transition name="slide-up">
-      <div v-if="showAudioOutputMenu" class="audio-output-menu">
-        <div class="audio-output-container">
-          <h3>Audio Output</h3>
-          
-          <div class="audio-output-list">
-            <!-- Earpiece (Phone) -->
-            <button
-              @click="selectAudioOutput('earpiece')"
-              :class="['audio-output-item', selectedAudioOutput === 'earpiece' && 'active']"
-            >
-              <svg class="icon-medium" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-              </svg>
-              <div class="audio-output-info">
-                <span class="audio-output-name">Phone Earpiece</span>
-                <span class="audio-output-desc">Private, hold phone to ear</span>
-              </div>
-              <svg v-if="selectedAudioOutput === 'earpiece'" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </button>
-
-            <!-- Speaker -->
-            <button
-              @click="selectAudioOutput('speaker')"
-              :class="['audio-output-item', selectedAudioOutput === 'speaker' && 'active']"
-            >
-              <svg class="icon-medium" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-              </svg>
-              <div class="audio-output-info">
-                <span class="audio-output-name">Speaker</span>
-                <span class="audio-output-desc">Loud, hands-free mode</span>
-              </div>
-              <svg v-if="selectedAudioOutput === 'speaker'" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </button>
-
-            <!-- Bluetooth -->
-            <button
-              @click="selectAudioOutput('bluetooth')"
-              :class="['audio-output-item', selectedAudioOutput === 'bluetooth' && 'active']"
-              :disabled="!bluetoothAvailable"
-            >
-              <svg class="icon-medium" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M6.5 6.5l11 11L12 23V1l5.5 5.5-11 11"/>
-              </svg>
-              <div class="audio-output-info">
-                <span class="audio-output-name">Bluetooth</span>
-                <span class="audio-output-desc">{{ bluetoothAvailable ? 'Wireless headset' : 'No device connected' }}</span>
-              </div>
-              <svg v-if="selectedAudioOutput === 'bluetooth'" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </button>
-
-            <!-- Wired Headphones -->
-            <button
-              @click="selectAudioOutput('headphones')"
-              :class="['audio-output-item', selectedAudioOutput === 'headphones' && 'active']"
-              :disabled="!headphonesAvailable"
-            >
-              <svg class="icon-medium" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-              </svg>
-              <div class="audio-output-info">
-                <span class="audio-output-name">Wired Headphones</span>
-                <span class="audio-output-desc">{{ headphonesAvailable ? 'Connected via 3.5mm jack' : 'Not connected' }}</span>
-              </div>
-              <svg v-if="selectedAudioOutput === 'headphones'" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+              <span>{{ getCameraLabel(camera) }}</span>
             </button>
           </div>
-
-          <button @click="showAudioOutputMenu = false" class="close-audio-output-btn">Close</button>
+          <button @click="showCameraSelector = false" class="close-camera-btn">Close</button>
         </div>
       </div>
     </transition>
@@ -511,8 +390,6 @@ const selectedAudioQuality = ref('music');
 const showSettings = ref(false);
 const isFullscreen = ref(false);
 const showControls = ref(true);
-const showMoreOptions = ref(false);
-const showAudioOutputMenu = ref(false);
 let controlsTimeout = null;
 const callStartTime = ref(null);
 const callDuration = ref('00:00');
@@ -520,12 +397,6 @@ const callDuration = ref('00:00');
 // Media Controls (WhatsApp Style)
 const audioEnabled = ref(true);
 const videoEnabled = ref(true);
-const speakerEnabled = ref(false);
-
-// Audio Output Selection
-const selectedAudioOutput = ref('earpiece'); // earpiece, speaker, bluetooth, headphones
-const bluetoothAvailable = ref(false);
-const headphonesAvailable = ref(false);
 
 // Camera Controls
 const cameraEnabled = ref(false);
@@ -537,7 +408,6 @@ const showCameraSelector = ref(false);
 // Refs for HTML elements
 const myVideo = ref(null);
 const userVideo = ref(null);
-const pipModeVideo = ref(null);
 const connectionRef = ref(null);
 
 // Phase 2: Authentication & Encryption
@@ -561,9 +431,6 @@ const copySuccess = ref(false);
 
 // Video swap functionality
 const isVideoSwapped = ref(false);
-
-// Android PiP mode detection
-const isInAndroidPipMode = ref(false);
 
 // PiP video dragging functionality - Using left/top positioning
 const pipPosition = ref({ x: window.innerWidth - 140, y: 80 }); // Default position (left from calculated right position)
@@ -621,14 +488,6 @@ onMounted(async () => {
     pipPosition.value = { x: window.innerWidth - 140, y: 80 };
   }
 
-  // Detect available audio outputs
-  detectAudioOutputs();
-  
-  // Re-check audio outputs periodically (every 2 seconds)
-  setInterval(() => {
-    detectAudioOutputs();
-  }, 2000);
-
   // Get available cameras
   await enumerateCameras();
 
@@ -671,49 +530,6 @@ onMounted(async () => {
 
   // Setup socket listeners
   setupSocketListeners();
-  
-  // Listen for PiP mode changes
-  window.addEventListener('pipModeChanged', (event) => {
-    const { isInPipMode } = JSON.parse(event.data);
-    console.log('PiP mode changed:', isInPipMode);
-    isInAndroidPipMode.value = isInPipMode;
-    
-    // Set correct video source for Android PiP mode
-    if (isInPipMode && pipModeVideo.value && stream.value) {
-      // Show YOUR video in Android PiP mode
-      pipModeVideo.value.srcObject = stream.value;
-      pipModeVideo.value.play().catch(err => console.log('PiP video play error:', err));
-    }
-    
-    // Hide internal controls in Android PiP mode
-    if (isInPipMode) {
-      showControls.value = false;
-    } else {
-      showControls.value = true;
-    }
-  });
-  
-  // Listen for PiP action buttons
-  window.addEventListener('pipAction', (event) => {
-    const { action } = JSON.parse(event.data);
-    console.log('PiP action:', action);
-    
-    switch(action) {
-      case 'mute':
-        toggleAudio();
-        break;
-      case 'hangup':
-        leaveCall();
-        break;
-      case 'camera':
-        switchCamera();
-        break;
-      case 'expand':
-        // Already handled by Android, just show controls
-        showControls.value = true;
-        break;
-    }
-  });
 });
 
 // Copy room name to clipboard
@@ -993,11 +809,7 @@ const joinWithPassword = async () => {
 
 const callUser = () => {
   isCalling.value = true;
-  
-  // Start foreground service
-  if (window.CallServicePlugin) {
-    window.CallServicePlugin.startCall();
-  }
+
 
   // Ensure we have media stream with ACTIVE tracks
   if (!stream.value) {
@@ -1097,12 +909,6 @@ const callUser = () => {
     userVideo.value.srcObject = userStream;
     // Ensure video plays
     userVideo.value.play().catch(err => {});
-    
-    // Apply audio routing immediately after stream is received
-    nextTick(async () => {
-      await detectAudioOutputs();
-      await applyAudioRouting();
-    });
 
     // Listen for track changes (when remote peer adds/removes tracks)
     userStream.onaddtrack = (event) => {
@@ -1190,11 +996,7 @@ const callUser = () => {
 const answerCall = () => {
   callAccepted.value = true;
   startCallTimer();
-  
-  // Start foreground service
-  if (window.CallServicePlugin) {
-    window.CallServicePlugin.startCall();
-  }
+
 
   // Ensure we have media stream with ACTIVE tracks
   if (!stream.value) {
@@ -1288,12 +1090,6 @@ const answerCall = () => {
     userVideo.value.srcObject = userStream;
     // Ensure video plays
     userVideo.value.play().catch(err => {});
-    
-    // Apply audio routing immediately after stream is received
-    nextTick(async () => {
-      await detectAudioOutputs();
-      await applyAudioRouting();
-    });
 
     // Listen for track changes (when remote peer adds/removes tracks)
     userStream.onaddtrack = (event) => {
@@ -1368,202 +1164,6 @@ const toggleAudio = () => {
     audioEnabled.value = audioTrack.enabled;
   }
 };
-
-const toggleSpeaker = () => {
-  speakerEnabled.value = !speakerEnabled.value;
-  // Note: Speaker control is typically handled by the browser/device
-  // This is mainly for UI indication
-};
-
-// Apply audio routing based on current selectedAudioOutput
-const applyAudioRouting = async () => {
-  const output = selectedAudioOutput.value;
-  console.log(`Applying audio routing: ${output}`);
-
-  try {
-    // On Android, use native audio routing plugin
-    if (window.AudioRouting) {
-      try {
-        const result = await window.AudioRouting.setAudioRoute({ route: output });
-        console.log('Native audio routing applied:', result);
-        return;
-      } catch (err) {
-        console.error('Native audio routing error:', err);
-      }
-    }
-    
-    // Fallback to web-based routing
-    const audioElements = [userVideo.value, myVideo.value];
-    
-    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
-      
-      console.log('All audio outputs:', audioOutputs.map(d => ({ label: d.label, id: d.deviceId })));
-      
-      let targetDeviceId = '';
-      
-      // Find the target device based on selection
-      if (output === 'bluetooth') {
-        const bluetoothDevice = audioOutputs.find(device => {
-          const label = (device.label || '').toLowerCase();
-          return (label.includes('bluetooth') || label.includes('bt') || 
-                  label.includes('wireless') || label.includes('airpods') ||
-                  label.includes('buds') || label.includes('headset') ||
-                  label.includes('headphone')) && 
-                  !label.includes('speaker');
-        });
-        if (bluetoothDevice) {
-          targetDeviceId = bluetoothDevice.deviceId;
-          console.log('Found Bluetooth device:', bluetoothDevice.label);
-        } else {
-          console.log('No Bluetooth device found, keeping default');
-        }
-      } else if (output === 'headphones') {
-        const headphonesDevice = audioOutputs.find(device => {
-          const label = (device.label || '').toLowerCase();
-          return label.includes('headphone') || label.includes('wired') || label.includes('3.5mm');
-        });
-        if (headphonesDevice) {
-          targetDeviceId = headphonesDevice.deviceId;
-          console.log('Found wired headphones:', headphonesDevice.label);
-        }
-      } else if (output === 'speaker') {
-        const speakerDevice = audioOutputs.find(device => {
-          const label = (device.label || '').toLowerCase();
-          return label.includes('speaker') || label.includes('loud');
-        });
-        if (speakerDevice) {
-          targetDeviceId = speakerDevice.deviceId;
-          console.log('Found speaker:', speakerDevice.label);
-        }
-      }
-      
-      // Apply to all audio/video elements
-      for (const element of audioElements) {
-        if (element && typeof element.setSinkId === 'function') {
-          try {
-            await element.setSinkId(targetDeviceId);
-            console.log(`✓ Applied audio output to element: ${targetDeviceId || 'default'}`);
-          } catch (err) {
-            console.error('setSinkId error:', err);
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Error applying audio routing:', err);
-  }
-};
-
-const selectAudioOutput = async (output) => {
-  selectedAudioOutput.value = output;
-  showAudioOutputMenu.value = false;
-  await applyAudioRouting();
-};
-
-const detectAudioOutputs = async () => {
-  try {
-    // On Android, use native plugin for better detection
-    if (window.AudioRouting) {
-      try {
-        const result = await window.AudioRouting.getAvailableAudioDevices();
-        console.log('Native audio devices:', result);
-        
-        bluetoothAvailable.value = result.hasBluetooth || false;
-        headphonesAvailable.value = result.hasWiredHeadset || false;
-        
-        console.log(`Bluetooth available: ${bluetoothAvailable.value}, Headphones: ${headphonesAvailable.value}`);
-        
-        // Auto-switch to Bluetooth headset when connected (only headphones, not speakers)
-        if (bluetoothAvailable.value && selectedAudioOutput.value !== 'bluetooth') {
-          const prevOutput = selectedAudioOutput.value;
-          selectedAudioOutput.value = 'bluetooth';
-          console.log(`Auto-switched from ${prevOutput} to Bluetooth headset`);
-          await applyAudioRouting();
-        }
-        // If Bluetooth was selected but disconnected, switch back to earpiece
-        else if (!bluetoothAvailable.value && selectedAudioOutput.value === 'bluetooth') {
-          selectedAudioOutput.value = 'earpiece';
-          console.log('Bluetooth disconnected, switched to earpiece');
-          await applyAudioRouting();
-        }
-        
-        return;
-      } catch (err) {
-        console.error('Native audio detection error:', err);
-      }
-    }
-    
-    // Fallback to web-based detection
-    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
-
-      console.log('Available audio outputs:', audioOutputs);
-
-      let hasBluetoothHeadset = false;
-      let hasWiredHeadphones = false;
-
-      audioOutputs.forEach(device => {
-        const label = (device.label || '').toLowerCase();
-        
-        // Check for Bluetooth headsets/headphones (not speakers)
-        // More comprehensive detection
-        if ((label.includes('bluetooth') || label.includes('bt') || 
-            label.includes('wireless') || label.includes('airpods') ||
-            label.includes('buds') || label.includes('headset') ||
-            label.includes('headphone')) && 
-            !label.includes('speaker') && !label.includes('output')) {
-          hasBluetoothHeadset = true;
-          console.log('✓ Bluetooth headset detected:', device.label);
-        }
-        
-        // Check for wired headphones
-        if (label.includes('headphone') || label.includes('headset') || 
-            label.includes('wired') || label.includes('3.5mm') ||
-            label.includes('jack')) {
-          hasWiredHeadphones = true;
-          console.log('✓ Wired headphones detected:', device.label);
-        }
-      });
-
-      bluetoothAvailable.value = hasBluetoothHeadset;
-      headphonesAvailable.value = hasWiredHeadphones;
-
-      // Auto-switch to Bluetooth headset when connected (only headphones, not speakers)
-      if (hasBluetoothHeadset && selectedAudioOutput.value !== 'bluetooth') {
-        const prevOutput = selectedAudioOutput.value;
-        selectedAudioOutput.value = 'bluetooth';
-        console.log(`Auto-switched from ${prevOutput} to Bluetooth headset`);
-        // Apply the audio routing immediately
-        await applyAudioRouting();
-      }
-      // Auto-switch to wired headphones if no Bluetooth
-      else if (hasWiredHeadphones && !hasBluetoothHeadset && selectedAudioOutput.value === 'earpiece') {
-        selectedAudioOutput.value = 'headphones';
-        console.log('Auto-switched to wired headphones');
-        await applyAudioRouting();
-      }
-      // If Bluetooth was selected but disconnected, switch back to earpiece
-      else if (!hasBluetoothHeadset && selectedAudioOutput.value === 'bluetooth') {
-        selectedAudioOutput.value = 'earpiece';
-        console.log('Bluetooth disconnected, switched to earpiece');
-        await applyAudioRouting();
-      }
-    }
-  } catch (err) {
-    console.log('Error detecting audio outputs:', err);
-  }
-};
-
-// Listen for device changes
-if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
-  navigator.mediaDevices.addEventListener('devicechange', async () => {
-    console.log('Audio device changed, re-detecting...');
-    await detectAudioOutputs();
-  });
-}
 
 const toggleVideo = () => {
   const videoTrack = stream.value.getVideoTracks()[0];
@@ -1872,16 +1472,12 @@ watch(() => userVideo.value?.srcObject, async (newSrcObject) => {
         userVideo.value?.play().catch(e => {});
       }, 100);
     });
-    
-    // Apply audio routing when video loads
-    await nextTick();
-    await applyAudioRouting();
   }
 });
 
 // Watch settings and camera selector - keep controls visible when they're open
-watch([() => showSettings.value, () => showCameraSelector.value, () => showMoreOptions.value, () => showAudioOutputMenu.value], ([settings, camera, moreOptions, audioOutput]) => {
-  if (settings || camera || moreOptions || audioOutput) {
+watch([() => showSettings.value, () => showCameraSelector.value], ([settings, camera]) => {
+  if (settings || camera) {
     showControls.value = true;
     if (controlsTimeout) {
       clearTimeout(controlsTimeout);
@@ -1908,12 +1504,6 @@ watch(() => callAccepted.value, async (accepted) => {
         }, 100);
       });
     }
-    
-    // Apply audio routing when call starts
-    await nextTick();
-    setTimeout(async () => {
-      await applyAudioRouting();
-    }, 500);
   }
 });
 
@@ -2007,67 +1597,13 @@ const toggleScreenShare = async () => {
   if (!isScreenSharing.value) {
     // Start screen sharing
     try {
-      let screenShareStream;
-
-      // Check if running on Android (Capacitor)
-      const isAndroid = window.Capacitor && window.Capacitor.getPlatform() === 'android';
-
-      if (isAndroid) {
-        // For Android, request permission first
-        try {
-          const { ScreenCapture } = window.Capacitor.Plugins;
-
-          console.log('Requesting screen capture permission on Android...');
-          
-          // Request permission - this MUST show the system dialog
-          const permissionResult = await ScreenCapture.requestScreenCapturePermission();
-          console.log('Permission result:', permissionResult);
-
-          if (!permissionResult || !permissionResult.granted) {
-            alert('Screen sharing permission was denied. Please try again and allow the permission.');
-            return;
-          }
-
-          console.log('Permission granted! Attempting to get display media...');
-
-          // Now get the display media stream after permission is granted
-          screenShareStream = await navigator.mediaDevices.getDisplayMedia({
-            video: {
-              displaySurface: 'monitor',
-              logicalSurface: false,
-              cursor: 'never'
-            },
-            audio: false
-          });
-
-          console.log('Screen share stream obtained:', screenShareStream);
-        } catch (permErr) {
-          console.error('Screen capture error on Android:', permErr);
-          alert('Could not start screen sharing: ' + (permErr.message || 'Unknown error'));
-          
-          // Clean up if there was an error
-          try {
-            const { ScreenCapture } = window.Capacitor.Plugins;
-            await ScreenCapture.stopScreenCapture();
-          } catch (e) {
-            console.error('Error cleaning up:', e);
-          }
-          return;
-        }
-      } else {
-        // For web/desktop
-        screenShareStream = await navigator.mediaDevices.getDisplayMedia({
-          video: {
-            cursor: 'always',
-            displaySurface: 'monitor'
-          },
-          audio: false
-        });
-      }
-
-      if (!screenShareStream) {
-        throw new Error('Failed to get screen share stream');
-      }
+      const screenShareStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          cursor: 'always',
+          displaySurface: 'monitor'
+        },
+        audio: false
+      });
 
       screenStream.value = screenShareStream;
       isScreenSharing.value = true;
@@ -2080,7 +1616,6 @@ const toggleScreenShare = async () => {
 
       if (videoSender) {
         await videoSender.replaceTrack(screenTrack);
-        console.log('Video track replaced with screen share');
       }
 
       // Update local video
@@ -2088,19 +1623,11 @@ const toggleScreenShare = async () => {
 
       // Handle screen share stop (user clicks browser "Stop sharing" button)
       screenTrack.onended = () => {
-        console.log('Screen share track ended');
         stopScreenShare();
       };
 
-      // Close the "more options" menu after starting screen share
-      showMoreOptions.value = false;
-
-      console.log('Screen sharing started successfully');
-
-    } catch (err) {
-      console.error('Screen share error:', err);
-      alert('Could not share screen: ' + (err.message || 'Unknown error'));
-      isScreenSharing.value = false;
+      } catch (err) {
+        alert('Could not share screen. Please try again.');
     }
   } else {
     // Stop screen sharing
@@ -2112,18 +1639,6 @@ const stopScreenShare = async () => {
   if (screenStream.value) {
     screenStream.value.getTracks().forEach(track => track.stop());
     screenStream.value = null;
-  }
-
-  // Stop screen capture on Android
-  const isAndroid = window.Capacitor && window.Capacitor.getPlatform() === 'android';
-  if (isAndroid) {
-    try {
-      const { ScreenCapture } = window.Capacitor.Plugins;
-      await ScreenCapture.stopScreenCapture();
-      console.log('Screen capture stopped in native plugin');
-    } catch (err) {
-      console.error('Error stopping screen capture:', err);
-    }
   }
 
   isScreenSharing.value = false;
@@ -2153,11 +1668,6 @@ const leaveCall = () => {
 
 const endCallCleanup = () => {
     callEnded.value = true;
-    
-    // Stop foreground service
-    if (window.CallServicePlugin) {
-      window.CallServicePlugin.endCall();
-    }
 
     // Clear duration timer
     if (durationInterval) {
@@ -3167,43 +2677,6 @@ body {
   box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
 }
 
-/* Camera Rotate Button on PiP */
-.pip-camera-rotate-btn {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 15;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.pip-camera-rotate-btn:hover {
-  background: rgba(138, 43, 226, 0.9);
-  border-color: rgba(138, 43, 226, 0.8);
-  transform: rotate(180deg) scale(1.1);
-  box-shadow: 0 0 15px rgba(138, 43, 226, 0.6);
-}
-
-.pip-camera-rotate-btn:active {
-  transform: rotate(180deg) scale(0.95);
-}
-
-.icon-rotate {
-  width: 18px;
-  height: 18px;
-  color: white;
-  stroke-width: 2.5;
-}
-
 /* Top Bar */
 .top-bar {
   position: absolute;
@@ -4090,382 +3563,6 @@ body {
     transform: translateY(0);
     opacity: 1;
   }
-}
-
-/* WhatsApp-Style Controls */
-.controls-group-whatsapp {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  justify-content: center;
-  background: rgba(20, 20, 20, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 16px 24px;
-  border-radius: 50px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-}
-
-.control-btn-whatsapp {
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  min-height: 56px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(60, 60, 60, 0.9);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.control-btn-whatsapp:active {
-  transform: scale(0.92);
-}
-
-.control-btn-whatsapp:hover {
-  background: rgba(80, 80, 80, 1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-
-.control-btn-whatsapp .icon {
-  width: 28px;
-  height: 28px;
-}
-
-.control-btn-whatsapp.btn-disabled {
-  background: rgba(200, 50, 50, 0.9);
-}
-
-.control-btn-whatsapp.btn-disabled:hover {
-  background: rgba(220, 60, 60, 1);
-}
-
-.control-btn-whatsapp.btn-active {
-  background: rgba(0, 168, 132, 0.9);
-}
-
-.control-btn-whatsapp.btn-active:hover {
-  background: rgba(0, 188, 152, 1);
-}
-
-.control-btn-whatsapp.hang-up-red {
-  background: rgba(220, 38, 38, 0.95);
-  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
-}
-
-.control-btn-whatsapp.hang-up-red:hover {
-  background: rgba(239, 68, 68, 1);
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.6);
-}
-
-/* More Options Menu */
-.more-options-menu {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(25, 25, 25, 0.98);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border-radius: 24px 24px 0 0;
-  box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  max-height: 80vh;
-  overflow-y: auto;
-  animation: slideUpFade 0.3s ease-out;
-}
-
-.options-container {
-  padding: 24px 20px;
-  padding-bottom: max(24px, env(safe-area-inset-bottom));
-}
-
-.options-container h3 {
-  color: white;
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 20px 0;
-  text-align: center;
-}
-
-.option-section {
-  margin: 24px 0;
-  padding: 16px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.option-section:last-of-type {
-  border-bottom: none;
-}
-
-.option-section h4 {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 16px;
-  font-weight: 500;
-  margin: 0 0 12px 0;
-}
-
-.camera-options-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.option-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: rgba(40, 40, 40, 0.8);
-  border: 2px solid transparent;
-  border-radius: 12px;
-  color: white;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-  text-align: left;
-}
-
-.option-item:hover {
-  background: rgba(60, 60, 60, 0.9);
-}
-
-.option-item.active {
-  background: rgba(0, 168, 132, 0.2);
-  border-color: rgba(0, 168, 132, 0.6);
-}
-
-.option-item .icon-small {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-.option-item .check-icon {
-  width: 20px;
-  height: 20px;
-  margin-left: auto;
-  color: #00a884;
-}
-
-.option-item span {
-  flex: 1;
-}
-
-.screen-share-option {
-  justify-content: flex-start;
-}
-
-.option-hint {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 13px;
-  margin: 8px 0 0 0;
-  padding-left: 4px;
-}
-
-.close-options-btn {
-  width: 100%;
-  padding: 14px;
-  margin-top: 20px;
-  background: rgba(60, 60, 60, 0.8);
-  border: none;
-  border-radius: 12px;
-  color: white;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.close-options-btn:hover {
-  background: rgba(80, 80, 80, 0.9);
-}
-
-.close-options-btn:active {
-  transform: scale(0.98);
-}
-
-@keyframes slideUpFade {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .controls-group-whatsapp {
-    gap: 14px;
-    padding: 12px 18px;
-  }
-
-  .control-btn-whatsapp {
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
-    min-height: 52px;
-  }
-
-  .control-btn-whatsapp .icon {
-    width: 26px;
-    height: 26px;
-  }
-
-  .options-container {
-    padding: 20px 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .controls-group-whatsapp {
-    gap: 12px;
-    padding: 10px 14px;
-  }
-
-  .control-btn-whatsapp {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
-  }
-
-  .control-btn-whatsapp .icon {
-    width: 24px;
-    height: 24px;
-  }
-}
-
-/* Audio Output Selector */
-.audio-output-menu {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(25, 25, 25, 0.98);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border-radius: 24px 24px 0 0;
-  box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.5);
-  z-index: 1001;
-  animation: slideUpFade 0.3s ease-out;
-}
-
-.audio-output-container {
-  padding: 24px 20px;
-  padding-bottom: max(24px, env(safe-area-inset-bottom));
-}
-
-.audio-output-container h3 {
-  color: white;
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 20px 0;
-  text-align: center;
-}
-
-.audio-output-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.audio-output-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: rgba(40, 40, 40, 0.8);
-  border: 2px solid transparent;
-  border-radius: 14px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-  text-align: left;
-}
-
-.audio-output-item:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.audio-output-item:not(:disabled):hover {
-  background: rgba(60, 60, 60, 0.9);
-}
-
-.audio-output-item.active {
-  background: rgba(0, 168, 132, 0.2);
-  border-color: rgba(0, 168, 132, 0.6);
-}
-
-.audio-output-item .icon-medium {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.audio-output-item.active .icon-medium {
-  color: #00a884;
-}
-
-.audio-output-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.audio-output-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: white;
-}
-
-.audio-output-desc {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.audio-output-item .check-icon {
-  width: 24px;
-  height: 24px;
-  margin-left: auto;
-  color: #00a884;
-  flex-shrink: 0;
-}
-
-.close-audio-output-btn {
-  width: 100%;
-  padding: 14px;
-  background: rgba(60, 60, 60, 0.8);
-  border: none;
-  border-radius: 12px;
-  color: white;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.close-audio-output-btn:hover {
-  background: rgba(80, 80, 80, 0.9);
-}
-
-.close-audio-output-btn:active {
-  transform: scale(0.98);
 }
 
 </style>
